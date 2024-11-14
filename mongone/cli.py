@@ -94,8 +94,6 @@ def generate_report(period):
 
         report_data.append(project_report)
 
-        break
-
     # Render the HTML report using Jinja2
     console.print("[INFO] Rendering HTML report...", style="bold blue")
     render_html_report(report_data)

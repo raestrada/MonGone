@@ -4,25 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MongoDB Atlas Usage Report</title>
+    <link rel="icon" href="https://res.cloudinary.com/dyknhuvxt/image/upload/c_thumb,w_200,g_face/v1731607427/mongone_wnzxyl.png" type="image/png">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-            color: #343a40;
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f7f7;
+            color: #333;
             margin: 0;
             padding: 0;
         }
         .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
         }
-        h1 {
+        header {
             text-align: center;
-            color: #007bff;
+            margin-bottom: 40px;
+        }
+        header img {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+        header a {
+            text-decoration: none;
+        }
+        header h1 {
+            color: #F5B700;
+            font-size: 2.5em;
+            margin: 0;
         }
         table {
             width: 100%;
@@ -53,7 +63,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>MongoDB Atlas Usage Report</h1>
+        <header>
+            <a href="https://raestrada.github.io/mongone/">
+                <img src="https://res.cloudinary.com/dyknhuvxt/image/upload/v1731607427/mongone_wnzxyl.png" alt="MonGone Logo">
+            </a>
+            <h1>MongoDB Atlas Usage Report</h1>
+        </header>
         {% for project in projects %}
         <h2>Project: {{ project.name }}</h2>
         <table>
