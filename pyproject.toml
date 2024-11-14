@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "mongone"
+version = "0.1.0"
+description = "A CLI tool to optimize MongoDB usage and remove unused resources. Generates reports for MongoDB Atlas clusters."
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+click = ">=8.0"
+rich = ">=13.0"
+Jinja2 = ">=3.1"
+requests = ">=2.26"
+PyYAML = ">=6.0"
+python-dateutil = "^2.9.0.post0"
+
+[tool.poetry.dev-dependencies]
+pytest = ">=7.1"
+flake8 = ">=6.0"
+mypy = ">=1.4"
+black = ">=23.0"
+isort = ">=5.12"
+
+[tool.poetry.scripts]
+mongone = "mongone.cli:cli"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
