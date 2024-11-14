@@ -1,4 +1,5 @@
 import os
+import re
 import click
 import yaml
 from datetime import datetime, timedelta
@@ -13,6 +14,10 @@ console = Console()
 
 CONFIG_FILE = "mongone.yaml"
 DEFAULT_PERIOD = 30  # days
+DEFAULT_ENV_PATTERNS = {
+    "staging": r".*staging.*",
+    "production": r".*production.*"
+}
 
 @click.group()
 def cli():
@@ -26,7 +31,8 @@ def init(atlas_org_id, report_period_days):
     """Initialize the mongone configuration file."""
     config = {
         "atlas_org_id": atlas_org_id,
-        "report_period_days": report_period_days
+        "report_period_days": report_period_days,
+        "environment_patterns": DEFAULT_ENV_PATTERNS
     }
     with open(CONFIG_FILE, "w") as file:
         yaml.dump(config, file)
@@ -45,6 +51,7 @@ def generate_report(period):
         config = yaml.safe_load(file)
     
     atlas_org_id = config.get("atlas_org_id")
+    env_patterns = config.get("environment_patterns", DEFAULT_ENV_PATTERNS)
 
     console.print("[INFO] Fetching projects from MongoDB Atlas...", style="bold blue")
     # Fetch projects from MongoDB Atlas organization
@@ -61,7 +68,8 @@ def generate_report(period):
 
     for project in projects:
         project_name = project["name"]
-        console.print(f"[INFO] Fetching clusters for project: {project_name}", style="bold blue")
+        environment = detect_environment(project_name, env_patterns)
+        console.print(f"[INFO] Fetching clusters for project: {project_name} (Environment: {environment})", style="bold blue")
         clusters = fetch_clusters(project["id"])
 
         if not clusters:
@@ -70,6 +78,7 @@ def generate_report(period):
 
         project_report = {
             "name": project_name,
+            "environment": environment,
             "clusters": []
         }
 
@@ -101,6 +110,7 @@ def generate_report(period):
     # Display a summary in the console
     table = Table(title="MongoDB Atlas Organization Usage Report")
     table.add_column("Project Name", style="bold cyan")
+    table.add_column("Environment", style="bold green")
     table.add_column("Cluster Name", style="bold magenta")
     table.add_column("Last Access Time", style="bold green")
     table.add_column("Status", style="bold yellow")
@@ -108,7 +118,7 @@ def generate_report(period):
     for project in report_data:
         for cluster in project["clusters"]:
             status = "Unused" if cluster["name"] in unused_clusters else "In Use"
-            table.add_row(project["name"], cluster["name"], cluster["last_access_time"], status)
+            table.add_row(project["name"], project["environment"], cluster["name"], cluster["last_access_time"], status)
     
     console.print(table)
 
@@ -171,6 +181,13 @@ def fetch_cluster_last_access(project_id, cluster_name):
             return None
     console.print(f"[WARNING] No access logs found for cluster: {cluster_name}", style="bold yellow")
     return None
+
+def detect_environment(project_name, patterns):
+    """Detect the environment of a given project based on its name."""
+    for env, pattern in patterns.items():
+        if re.search(pattern, project_name, re.IGNORECASE):
+            return env
+    return "unknown"
 
 def render_html_report(data):
     """Render the HTML report using Jinja2 template."""

@@ -53,13 +53,32 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+        .project-row {
+            background-color: #f0f0f0;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .cluster-row {
+            background-color: #ffffff;
+        }
         .unused {
             background-color: #ffcccc;
         }
         .in-use {
             background-color: #ccffcc;
         }
+        .expandable {
+            display: table-row;
+        }
     </style>
+    <script>
+        function toggleClusters(projectId) {
+            const clusters = document.querySelectorAll(`.cluster-row[data-project="${projectId}"]`);
+            clusters.forEach(cluster => {
+                cluster.style.display = cluster.style.display === 'none' ? 'table-row' : 'none';
+            });
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -69,27 +88,35 @@
             </a>
             <h1>MongoDB Atlas Usage Report</h1>
         </header>
-        {% for project in projects %}
-        <h2>Project: {{ project.name }}</h2>
         <table>
             <thead>
                 <tr>
+                    <th>Project Name</th>
+                    <th>Environment</th>
                     <th>Cluster Name</th>
                     <th>Last Access Time</th>
                     <th>Status</th>
                 </tr>
             </thead>
             <tbody>
+                {% for project in projects %}
+                <tr class="project-row" onclick="toggleClusters('{{ project.name }}')">
+                    <td>{{ project.name }}</td>
+                    <td>{{ project.environment }}</td>
+                    <td colspan="3">Click to expand/collapse clusters</td>
+                </tr>
                 {% for cluster in project.clusters %}
-                <tr class="{{ 'unused' if cluster.name in unused_clusters else 'in-use' }}">
+                <tr class="cluster-row" data-project="{{ project.name }}" style="display: table-row;">
+                    <td></td>
+                    <td></td>
                     <td>{{ cluster.name }}</td>
                     <td>{{ cluster.last_access_time }}</td>
-                    <td>{{ 'Unused' if cluster.name in unused_clusters else 'In Use' }}</td>
+                    <td style="color: {{ 'red' if cluster.name in unused_clusters else 'green' }}; font-weight: bold;">{{ 'Unused' if cluster.name in unused_clusters else 'In Use' }}</td>
                 </tr>
+                {% endfor %}
                 {% endfor %}
             </tbody>
         </table>
-        {% endfor %}
     </div>
 </body>
 </html>
