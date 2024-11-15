@@ -47,3 +47,30 @@ def fetch_cluster_last_access(project_id, cluster_name):
         style="bold yellow",
     )
     return None
+
+from mongone.http import make_request
+
+def is_cluster_autoscaling(group_id, cluster_name):
+    """Check if the cluster has autoscaling enabled for compute or disk."""
+    url = f"https://cloud.mongodb.com/api/atlas/v2/groups/{group_id}/clusters/{cluster_name}"
+    response = make_request(url)
+
+    if not response or response.status_code != 200:
+        return None, None
+
+    try:
+        cluster_data = response.json()
+        replication_specs = cluster_data.get("replicationSpecs", [])
+
+        if replication_specs:
+            region_configs = replication_specs[0].get("regionConfigs", [])
+            if region_configs:
+                auto_scaling = region_configs[0].get("autoScaling", {})
+                compute_scaling = auto_scaling.get("compute", {}).get("enabled", False)
+                disk_scaling = auto_scaling.get("diskGB", {}).get("enabled", False)
+                return compute_scaling, disk_scaling
+
+    except Exception as e:
+        print(f"[ERROR] Failed to parse autoscaling information: {e}")
+
+    return False, False

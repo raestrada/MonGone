@@ -7,7 +7,7 @@ from rich.table import Table
 from jinja2 import Environment, FileSystemLoader
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
-from mongone.clusters import fetch_cluster_last_access, fetch_clusters
+from mongone.clusters import fetch_cluster_last_access, fetch_clusters, is_cluster_autoscaling
 from mongone.invoices import get_latest_invoice_id, get_cluster_cost, fetch_invoice_csv
 from mongone.projects import fetch_projects
 from mongone.enviroments import detect_environment
@@ -39,6 +39,7 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
         cluster_name = cluster["name"]
         last_access_time = fetch_cluster_last_access(project["id"], cluster_name)
         cluster_unused = True
+        autoscaling_compute, autoscaling_disk = is_cluster_autoscaling(project["id"], cluster_name)
         cluster_report = {
             "name": cluster_name,
             "last_access_time": (
@@ -48,6 +49,8 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
             ),
             "databases": [],
             "cost": get_cluster_cost(csv_data, cluster_name),
+            "autoscaling_compute": autoscaling_compute,
+            "autoscaling_disk": autoscaling_disk,
         }
 
         if (
@@ -167,17 +170,23 @@ def generate_report(period):
     table.add_column("Cluster Name", style="bold magenta")
     table.add_column("Last Access Time", style="bold green")
     table.add_column("Status", style="bold yellow")
+    table.add_column("Autoscaling Compute", style="bold blue")
+    table.add_column("Autoscaling Disk", style="bold blue")
     table.add_column("Cost", style="bold red")
 
     for project in report_data:
         for cluster in project["clusters"]:
             status = "Unused" if cluster["name"] in all_unused_clusters else "In Use"
+            autoscaling_compute = "Enabled" if cluster["autoscaling_compute"] else "Disabled"
+            autoscaling_disk = "Enabled" if cluster["autoscaling_disk"] else "Disabled"
             table.add_row(
                 project["name"],
                 project["environment"],
                 cluster["name"],
                 cluster["last_access_time"],
                 status,
+                autoscaling_compute,
+                autoscaling_disk,
                 f"${cluster['cost']:.2f}",
             )
 
