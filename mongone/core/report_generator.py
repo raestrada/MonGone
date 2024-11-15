@@ -167,6 +167,7 @@ def generate_report_logic(config, period):
         "all_unused_clusters": all_unused_clusters,
     }
 
+
 def transform_force_data_to_expected_structure(raw_data, period=30):
     """
     Transforms the data loaded from 'force-data.yaml' to match the expected structure for the report,
@@ -182,18 +183,22 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
 
     cutoff_date = datetime.now().replace(tzinfo=None) - timedelta(days=period)
 
-    for project in raw_data.get('projects', []):
+    for project in raw_data.get("projects", []):
         project_report = {
             "name": project.get("name"),
             "environment": project.get("environment", "unknown"),
-            "clusters": []
+            "clusters": [],
         }
-        
+
         for cluster in project.get("clusters", []):
             last_access_time = cluster.get("last_access_time")
-            cluster_unused = True if not last_access_time or last_access_time == "N/A" else False
+            cluster_unused = (
+                True if not last_access_time or last_access_time == "N/A" else False
+            )
             if last_access_time and last_access_time != "N/A":
-                last_access_time = datetime.strptime(last_access_time, "%Y-%m-%dT%H:%M:%S")
+                last_access_time = datetime.strptime(
+                    last_access_time, "%Y-%m-%dT%H:%M:%S"
+                )
                 if last_access_time.replace(tzinfo=None) >= cutoff_date:
                     cluster_unused = False
 
@@ -203,7 +208,7 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
                 "databases": cluster.get("databases", []),
                 "cost": cluster.get("cost", 0),
                 "autoscaling_compute": cluster.get("autoscaling_compute", False),
-                "autoscaling_disk": cluster.get("autoscaling_disk", False)
+                "autoscaling_disk": cluster.get("autoscaling_disk", False),
             }
             project_report["clusters"].append(cluster_report)
 
@@ -217,7 +222,7 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
                 unused_cluster_count += 1
                 all_unused_clusters.append(cluster_report["name"])
             total_cost += cluster_report["cost"]
-        
+
         transformed_data.append(project_report)
 
     return {

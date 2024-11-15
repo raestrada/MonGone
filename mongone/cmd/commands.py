@@ -1,7 +1,10 @@
 import click
 import yaml
 from mongone.core.config import load_config, save_config
-from mongone.core.report_generator import generate_report_logic, transform_force_data_to_expected_structure
+from mongone.core.report_generator import (
+    generate_report_logic,
+    transform_force_data_to_expected_structure,
+)
 from mongone.utils.rendering import render_html_report, display_summary
 from mongone.utils.helpers import validate_file_exists, Console
 
@@ -58,8 +61,9 @@ def init(atlas_org_id, report_period_days):
 
     with open("force-data.yaml", "w") as file:
         yaml.dump(force_data_example, file)
-    
+
     console.print("[green]Example 'force-data.yaml' file created successfully.[/]")
+
 
 @cli.command()
 @click.option(
@@ -89,6 +93,7 @@ def generate_report(force, period):
     render_html_report(data)
     # Display summary in the console
     display_summary(data)
+
 
 if __name__ == "__main__":
     cli()
