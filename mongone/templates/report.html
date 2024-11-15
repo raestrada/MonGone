@@ -42,6 +42,33 @@
             margin: 0;
         }
 
+        .summary {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+        }
+
+        .summary-item {
+            flex: 1;
+        }
+
+        .summary-item h2 {
+            font-size: 1.2em;
+            color: #007bff;
+            margin: 0;
+        }
+
+        .summary-item p {
+            font-size: 1.5em;
+            color: #333;
+            margin: 5px 0 0;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -158,6 +185,30 @@
             </a>
             <h1>MongoDB Atlas Usage Report</h1>
         </header>
+
+        <div class="summary">
+            <div class="summary-item">
+                <h2>Total Clusters</h2>
+                <p>{{ total_clusters }}</p>
+            </div>
+            <div class="summary-item">
+                <h2>Clusters Without Compute Autoscaling</h2>
+                <p>{{ percentage_no_autoscaling_compute }}%</p>
+            </div>
+            <div class="summary-item">
+                <h2>Clusters Without Disk Autoscaling</h2>
+                <p>{{ percentage_no_autoscaling_disk }}%</p>
+            </div>
+            <div class="summary-item">
+                <h2>Clusters Not In Use</h2>
+                <p>{{ percentage_unused_clusters }}%</p>
+            </div>
+            <div class="summary-item">
+                <h2>Total Cost (USD)</h2>
+                <p>${{ total_cost }}</p>
+            </div>
+        </div>
+
         <table>
             <thead>
                 <tr>

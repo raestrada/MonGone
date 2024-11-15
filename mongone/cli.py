@@ -150,6 +150,12 @@ def generate_report(period):
     all_unused_clusters = []
     cutoff_date = datetime.now().replace(tzinfo=None) - timedelta(days=period)
 
+    total_clusters = 0
+    clusters_without_autoscaling_compute = 0
+    clusters_without_autoscaling_disk = 0
+    unused_cluster_count = 0
+    total_cost = 0.0
+
     with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
         futures = [executor.submit(process_project, project, env_patterns, csv_data, cutoff_date) for project in projects]
         for future in futures:
@@ -159,9 +165,41 @@ def generate_report(period):
                 report_data.append(project_report)
                 all_unused_clusters.extend(unused_clusters)
 
+                for cluster in project_report["clusters"]:
+                    total_clusters += 1
+                    if not cluster["autoscaling_compute"]:
+                        clusters_without_autoscaling_compute += 1
+                    if not cluster["autoscaling_disk"]:
+                        clusters_without_autoscaling_disk += 1
+                    if cluster["name"] in unused_clusters:
+                        unused_cluster_count += 1
+                    total_cost += cluster["cost"]
+
+    # Calculate percentages
+    percentage_no_autoscaling_compute = (
+        (clusters_without_autoscaling_compute / total_clusters) * 100
+        if total_clusters > 0
+        else 0
+    )
+    percentage_no_autoscaling_disk = (
+        (clusters_without_autoscaling_disk / total_clusters) * 100
+        if total_clusters > 0
+        else 0
+    )
+    percentage_unused_clusters = (
+        (unused_cluster_count / total_clusters) * 100 if total_clusters > 0 else 0
+    )
+
     # Render the HTML report using Jinja2
     console.print("[INFO] Rendering HTML report...", style="bold blue")
-    render_html_report(report_data)
+    render_html_report(
+        report_data,
+        total_clusters,
+        percentage_no_autoscaling_compute,
+        percentage_no_autoscaling_disk,
+        percentage_unused_clusters,
+        total_cost,
+    )
 
     # Display a summary in the console
     table = Table(title="MongoDB Atlas Organization Usage Report")
@@ -193,11 +231,18 @@ def generate_report(period):
     console.print(table)
 
 
-def render_html_report(data):
+def render_html_report(data, total_clusters, percentage_no_autoscaling_compute, percentage_no_autoscaling_disk, percentage_unused_clusters, total_cost):
     """Render the HTML report using Jinja2 template."""
     env = Environment(loader=FileSystemLoader("mongone/templates"))
     template = env.get_template("report.html")
-    output_from_parsed_template = template.render(projects=data)
+    output_from_parsed_template = template.render(
+        projects=data,
+        total_clusters=total_clusters,
+        percentage_no_autoscaling_compute=percentage_no_autoscaling_compute,
+        percentage_no_autoscaling_disk=percentage_no_autoscaling_disk,
+        percentage_unused_clusters=percentage_unused_clusters,
+        total_cost=total_cost,
+    )
 
     # Save the report in the 'reports' directory
     output_dir = "reports"
