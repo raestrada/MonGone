@@ -1,7 +1,7 @@
 from rich.console import Console
 import csv
 from io import StringIO
-from mongone.http import make_request
+from mongone.utils.http import make_request
 
 console = Console()
 

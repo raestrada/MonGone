@@ -1,5 +1,5 @@
 from rich.console import Console
-from mongone.http import make_request
+from mongone.utils.http import make_request
 
 console = Console()
 

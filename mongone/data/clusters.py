@@ -1,6 +1,6 @@
 from rich.console import Console
 import dateutil.parser
-from mongone.http import make_request
+from mongone.utils.http import make_request
 
 console = Console()
 
@@ -49,7 +49,7 @@ def fetch_cluster_last_access(project_id, cluster_name):
     return None
 
 
-from mongone.http import make_request
+from mongone.utils.http import make_request
 
 
 def is_cluster_autoscaling(group_id, cluster_name):
