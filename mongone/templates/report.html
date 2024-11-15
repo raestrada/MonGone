@@ -34,6 +34,20 @@
             font-size: 2.5em;
             margin: 0;
         }
+        nav {
+            background-color: #007bff;
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -49,6 +63,7 @@
         th {
             background-color: #007bff;
             color: #ffffff;
+            cursor: pointer;
         }
         tr:nth-child(even) {
             background-color: #f2f2f2;
@@ -57,9 +72,21 @@
             background-color: #f0f0f0;
             cursor: pointer;
             font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .project-row:hover {
+            background-color: #e0e0e0;
         }
         .cluster-row {
             background-color: #ffffff;
+            transition: max-height 0.5s ease, opacity 0.5s ease;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        .cluster-row.visible {
+            max-height: 100px;
+            opacity: 1;
         }
         .unused {
             background-color: #ffcccc;
@@ -75,8 +102,49 @@
         function toggleClusters(projectId) {
             const clusters = document.querySelectorAll(`.cluster-row[data-project="${projectId}"]`);
             clusters.forEach(cluster => {
-                cluster.style.display = cluster.style.display === 'none' ? 'table-row' : 'none';
+                if (cluster.classList.contains('visible')) {
+                    cluster.classList.remove('visible');
+                } else {
+                    cluster.classList.add('visible');
+                }
             });
+        }
+
+        function sortTable(n) {
+            const table = document.querySelector("table");
+            let switching = true;
+            let direction = "asc";
+            let switchCount = 0;
+            while (switching) {
+                switching = false;
+                const rows = table.rows;
+                for (let i = 1; i < (rows.length - 1); i++) {
+                    let shouldSwitch = false;
+                    const x = rows[i].getElementsByTagName("TD")[n];
+                    const y = rows[i + 1].getElementsByTagName("TD")[n];
+                    if (direction === "asc") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (direction === "desc") {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchCount++;
+                } else {
+                    if (switchCount === 0 && direction === "asc") {
+                        direction = "desc";
+                        switching = true;
+                    }
+                }
+            }
         }
     </script>
 </head>
@@ -91,12 +159,12 @@
         <table>
             <thead>
                 <tr>
-                    <th>Project Name</th>
-                    <th>Environment</th>
-                    <th>Cluster Name</th>
-                    <th>Last Access Time</th>
-                    <th>Status</th>
-                    <th>Cost (USD)</th>
+                    <th onclick="sortTable(0)">Project Name</th>
+                    <th onclick="sortTable(1)">Environment</th>
+                    <th onclick="sortTable(2)">Cluster Name</th>
+                    <th onclick="sortTable(3)">Last Access Time</th>
+                    <th onclick="sortTable(4)">Status</th>
+                    <th onclick="sortTable(5)">Cost (USD)</th>
                 </tr>
             </thead>
             <tbody>
@@ -107,13 +175,13 @@
                     <td colspan="4">Click to expand/collapse clusters</td>
                 </tr>
                 {% for cluster in project.clusters %}
-                <tr class="cluster-row" data-project="{{ project.name }}" style="display: table-row;">
+                <tr class="cluster-row visible" data-project="{{ project.name }}">
                     <td></td>
                     <td></td>
                     <td>{{ cluster.name }}</td>
                     <td>{{ cluster.last_access_time }}</td>
                     <td style="color: {{ 'red' if cluster.name in unused_clusters else 'green' }}; font-weight: bold;">{{ 'Unused' if cluster.name in unused_clusters else 'In Use' }}</td>
-                    <td>${{ cluster.cost }}</td>
+                    <td>${{ cluster.cost | round(0) }} USD</td>
                 </tr>
                 {% endfor %}
                 {% endfor %}

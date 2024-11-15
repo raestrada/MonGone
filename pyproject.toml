@@ -25,6 +25,9 @@ isort = ">=5.12"
 [tool.poetry.scripts]
 mongone = "mongone.cli:cli"
 
+[tool.poetry.group.dev.dependencies]
+ipdb = "^0.13.13"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
