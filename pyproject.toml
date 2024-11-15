@@ -5,6 +5,10 @@ description = "A CLI tool to optimize MongoDB usage and remove unused resources.
 authors = ["Rodrigo estrada <rodrigo.estrada@gmail.com>"]
 license = "MIT"
 readme = "README.md"
+# Aquí especificamos los archivos adicionales que queremos incluir
+include = [
+    "mongone/templates/*.html"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10"
