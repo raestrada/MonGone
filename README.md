@@ -20,7 +20,7 @@ Visit the [MonGone Home Page](https://raestrada.github.io/mongone/) for more inf
 Install MonGone directly from GitHub using `pipx`:
 
 ```sh
-pipx install git+https://github.com/raestrada/MonGone.git@v0.2.0
+pipx install git+https://github.com/raestrada/MonGone.git@v0.3.0
 ```
 
 ### Usage

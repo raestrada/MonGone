@@ -12,13 +12,13 @@ MonGone can be easily installed using `pipx`. Follow the steps below:
 ### Installation via `pipx`
 
 ```sh
-pipx install git+https://github.com/raestrada/MonGone.git@v0.2.0
+pipx install git+https://github.com/raestrada/MonGone.git@v0.3.0
 ```
 
 Alternatively, you can use `pip` if `pipx` is not available:
 
 ```sh
-pip install git+https://github.com/raestrada/MonGone.git@v0.2.0
+pip install git+https://github.com/raestrada/MonGone.git@v0.3.0
 ```
 
 Once installed, you can verify the installation by running:

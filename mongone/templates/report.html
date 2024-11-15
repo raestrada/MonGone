@@ -116,6 +116,10 @@
             background-color: #ccffcc;
         }
 
+        .unknown {
+            background-color: #ffcc99;
+        }
+
         .autoscaling-enabled {
             color: green;
             font-weight: bold;
@@ -243,8 +247,8 @@
                     <td>{{ project.environment }}</td>
                     <td>{{ cluster.name }}</td>
                     <td>{{ cluster.last_access_time }}</td>
-                    <td class="{{ 'unused' if cluster.name in unused_clusters else 'in-use' }}">
-                        {{ 'Unused' if cluster.name in unused_clusters else 'In Use' }}
+                    <td class="{{ 'unknown' if cluster.last_access_time == 'N/A' else ('unused' if cluster.name in unused_clusters else 'in-use') }}">
+                        {{ 'Unknown' if cluster.last_access_time == 'N/A' else ('Unused' if cluster.name in unused_clusters else 'In Use') }}
                     </td>
                     <td class="{{ 'autoscaling-enabled' if cluster.autoscaling_compute else 'autoscaling-disabled' }}">
                         {{ 'Enabled' if cluster.autoscaling_compute else 'Disabled' }}
