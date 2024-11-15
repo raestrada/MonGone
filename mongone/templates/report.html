@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MongoDB Atlas Usage Report</title>
-    <link rel="icon" href="https://res.cloudinary.com/dyknhuvxt/image/upload/c_thumb,w_200,g_face/v1731607427/mongone_wnzxyl.png" type="image/png">
+    <link rel="icon" href="https://res.cloudinary.com/dyknhuvxt/image/upload/c_thumb,w_200,g_face/v1731607427/mongone_wnzxyl.png"
+        type="image/png">
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -13,127 +15,119 @@
             margin: 0;
             padding: 0;
         }
+
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 40px 20px;
         }
+
         header {
             text-align: center;
             margin-bottom: 40px;
         }
+
         header img {
             width: 150px;
             margin-bottom: 20px;
         }
+
         header a {
             text-decoration: none;
         }
+
         header h1 {
             color: #F5B700;
             font-size: 2.5em;
             margin: 0;
         }
-        nav {
-            background-color: #007bff;
-            padding: 10px;
-            text-align: center;
-        }
-        nav a {
-            color: #ffffff;
-            text-decoration: none;
-            margin: 0 15px;
-            font-weight: bold;
-        }
-        nav a:hover {
-            text-decoration: underline;
-        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        table, th, td {
-            border: 1px solid #dee2e6;
-        }
+
         th, td {
-            padding: 12px;
+            border: 1px solid #dee2e6;
+            padding: 15px;
             text-align: left;
         }
+
         th {
             background-color: #007bff;
             color: #ffffff;
             cursor: pointer;
+            user-select: none;
         }
+
+        th:hover {
+            background-color: #0056b3;
+        }
+
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        .project-row {
-            background-color: #f0f0f0;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s ease;
-        }
-        .project-row:hover {
-            background-color: #e0e0e0;
-        }
-        .cluster-row {
-            background-color: #ffffff;
-            transition: max-height 0.5s ease, opacity 0.5s ease;
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-        }
-        .cluster-row.visible {
-            max-height: 100px;
-            opacity: 1;
-        }
+
         .unused {
             background-color: #ffcccc;
         }
+
         .in-use {
             background-color: #ccffcc;
         }
-        .expandable {
-            display: table-row;
-        }
-    </style>
-    <script>
-        function toggleClusters(projectId) {
-            const clusters = document.querySelectorAll(`.cluster-row[data-project="${projectId}"]`);
-            clusters.forEach(cluster => {
-                if (cluster.classList.contains('visible')) {
-                    cluster.classList.remove('visible');
-                } else {
-                    cluster.classList.add('visible');
-                }
-            });
+
+        .autoscaling-enabled {
+            color: green;
+            font-weight: bold;
         }
 
+        .autoscaling-disabled {
+            color: red;
+            font-weight: bold;
+        }
+
+    </style>
+    <script>
         function sortTable(n) {
             const table = document.querySelector("table");
-            let switching = true;
-            let direction = "asc";
-            let switchCount = 0;
+            let rows, switching, i, x, y, shouldSwitch, direction, switchCount = 0;
+            switching = true;
+            direction = "asc";
+
             while (switching) {
                 switching = false;
-                const rows = table.rows;
-                for (let i = 1; i < (rows.length - 1); i++) {
-                    let shouldSwitch = false;
-                    const x = rows[i].getElementsByTagName("TD")[n];
-                    const y = rows[i + 1].getElementsByTagName("TD")[n];
-                    if (direction === "asc") {
-                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                            shouldSwitch = true;
-                            break;
+                rows = table.rows;
+
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+
+                    if (x && y) {
+                        let xContent = x.innerHTML.trim();
+                        let yContent = y.innerHTML.trim();
+
+                        if (!isNaN(parseFloat(xContent)) && !isNaN(parseFloat(yContent))) {
+                            xContent = parseFloat(xContent);
+                            yContent = parseFloat(yContent);
                         }
-                    } else if (direction === "desc") {
-                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                            shouldSwitch = true;
-                            break;
+
+                        if (direction === "asc") {
+                            if (xContent > yContent) {
+                                shouldSwitch = true;
+                                break;
+                            }
+                        } else if (direction === "desc") {
+                            if (xContent < yContent) {
+                                shouldSwitch = true;
+                                break;
+                            }
                         }
                     }
                 }
+
                 if (shouldSwitch) {
                     rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                     switching = true;
@@ -147,7 +141,9 @@
             }
         }
     </script>
+
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -171,20 +167,21 @@
             </thead>
             <tbody>
                 {% for project in projects %}
-                <tr class="project-row" onclick="toggleClusters('{{ project.name }}')">
+                {% for cluster in project.clusters %}
+                <tr>
                     <td>{{ project.name }}</td>
                     <td>{{ project.environment }}</td>
-                    <td colspan="6">Click to expand/collapse clusters</td>
-                </tr>
-                {% for cluster in project.clusters %}
-                <tr class="cluster-row visible" data-project="{{ project.name }}">
-                    <td></td>
-                    <td></td>
                     <td>{{ cluster.name }}</td>
                     <td>{{ cluster.last_access_time }}</td>
-                    <td style="color: {{ 'red' if cluster.name in unused_clusters else 'green' }}; font-weight: bold;">{{ 'Unused' if cluster.name in unused_clusters else 'In Use' }}</td>
-                    <td style="color: {{ 'green' if cluster.autoscaling_compute else 'red' }}; font-weight: bold;">{{ 'Enabled' if cluster.autoscaling_compute else 'Disabled' }}</td>
-                    <td style="color: {{ 'green' if cluster.autoscaling_disk else 'red' }}; font-weight: bold;">{{ 'Enabled' if cluster.autoscaling_disk else 'Disabled' }}</td>
+                    <td class="{{ 'unused' if cluster.name in unused_clusters else 'in-use' }}">
+                        {{ 'Unused' if cluster.name in unused_clusters else 'In Use' }}
+                    </td>
+                    <td class="{{ 'autoscaling-enabled' if cluster.autoscaling_compute else 'autoscaling-disabled' }}">
+                        {{ 'Enabled' if cluster.autoscaling_compute else 'Disabled' }}
+                    </td>
+                    <td class="{{ 'autoscaling-enabled' if cluster.autoscaling_disk else 'autoscaling-disabled' }}">
+                        {{ 'Enabled' if cluster.autoscaling_disk else 'Disabled' }}
+                    </td>
                     <td>${{ cluster.cost | round(0) }} USD</td>
                 </tr>
                 {% endfor %}
@@ -193,4 +190,5 @@
         </table>
     </div>
 </body>
+
 </html>
