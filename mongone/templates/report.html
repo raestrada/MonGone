@@ -109,6 +109,13 @@
                         let xContent = x.innerHTML.trim();
                         let yContent = y.innerHTML.trim();
 
+                        // Si estamos ordenando la columna de costos, eliminamos el símbolo de moneda y convertimos a número.
+                        if (n === 7) {  // Índice de la columna de costos
+                            xContent = parseFloat(xContent.replace(/[^0-9.-]+/g, ""));
+                            yContent = parseFloat(yContent.replace(/[^0-9.-]+/g, ""));
+                        }
+
+                        // Si el contenido es un número, lo tratamos como tal.
                         if (!isNaN(parseFloat(xContent)) && !isNaN(parseFloat(yContent))) {
                             xContent = parseFloat(xContent);
                             yContent = parseFloat(yContent);
