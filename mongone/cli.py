@@ -252,7 +252,8 @@ def render_html_report(
     total_cost,
 ):
     """Render the HTML report using Jinja2 template."""
-    env = Environment(loader=FileSystemLoader("mongone/templates"))
+    template_dir = os.path.join(os.path.dirname(__file__), "templates")
+    env = Environment(loader=FileSystemLoader(template_dir))
     template = env.get_template("report.html")
     output_from_parsed_template = template.render(
         projects=data,
