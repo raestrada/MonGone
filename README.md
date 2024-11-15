@@ -80,7 +80,7 @@ mongone generate-report --period 30 --force-data
 This forces the tool to regenerate all data, ignoring any cached information.
 
 ## Documentation
-For detailed guidance and more examples, check out the [MonGone Documentation](https://raestrada.github.io/mongone/docs.html).
+For detailed guidance and more examples, check out the [MonGone Documentation](https://raestrada.github.io/MonGone/docs.html).
 
 ## Screenshot
 Below is a preview of the MonGone resource report:
