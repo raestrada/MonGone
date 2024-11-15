@@ -48,7 +48,9 @@ def fetch_cluster_last_access(project_id, cluster_name):
     )
     return None
 
+
 from mongone.http import make_request
+
 
 def is_cluster_autoscaling(group_id, cluster_name):
     """Check if the cluster has autoscaling enabled for compute or disk."""

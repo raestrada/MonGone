@@ -29,21 +29,24 @@ def fetch_invoice_csv(org_id, invoice_id):
     """Fetch the CSV data for a specific invoice."""
     csv_url = f"https://cloud.mongodb.com/api/atlas/v2/orgs/{org_id}/invoices/{invoice_id}/csv"
     csv_response = make_request(csv_url, response_format="csv")
-    
+
     if not csv_response or csv_response.status_code != 200:
         console.print("[ERROR] Unable to retrieve invoice CSV data.", style="bold red")
         return None
 
     try:
-        csv_data = csv_response.content.decode('utf-8')
+        csv_data = csv_response.content.decode("utf-8")
     except UnicodeDecodeError as e:
         console.print(f"[ERROR] Unable to decode CSV data: {e}", style="bold red")
         return None
 
     # Remove metadata before the actual CSV header (find the line that starts with "Date,")
     csv_lines = csv_data.splitlines()
-    start_index = next((i for i, line in enumerate(csv_lines) if line.startswith("Date,Usage Date,")), None)
-    
+    start_index = next(
+        (i for i, line in enumerate(csv_lines) if line.startswith("Date,Usage Date,")),
+        None,
+    )
+
     if start_index is not None:
         csv_data = "\n".join(csv_lines[start_index:])
     else:

@@ -7,7 +7,11 @@ from rich.table import Table
 from jinja2 import Environment, FileSystemLoader
 from concurrent.futures import ThreadPoolExecutor
 import multiprocessing
-from mongone.clusters import fetch_cluster_last_access, fetch_clusters, is_cluster_autoscaling
+from mongone.clusters import (
+    fetch_cluster_last_access,
+    fetch_clusters,
+    is_cluster_autoscaling,
+)
 from mongone.invoices import get_latest_invoice_id, get_cluster_cost, fetch_invoice_csv
 from mongone.projects import fetch_projects
 from mongone.enviroments import detect_environment
@@ -39,7 +43,9 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
         cluster_name = cluster["name"]
         last_access_time = fetch_cluster_last_access(project["id"], cluster_name)
         cluster_unused = True
-        autoscaling_compute, autoscaling_disk = is_cluster_autoscaling(project["id"], cluster_name)
+        autoscaling_compute, autoscaling_disk = is_cluster_autoscaling(
+            project["id"], cluster_name
+        )
         cluster_report = {
             "name": cluster_name,
             "last_access_time": (
@@ -48,15 +54,14 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
                 else "N/A"
             ),
             "databases": [],
-            "cost": get_cluster_cost(csv_data, project_name, cluster_name),  # Updated to include project_name
+            "cost": get_cluster_cost(
+                csv_data, project_name, cluster_name
+            ),  # Updated to include project_name
             "autoscaling_compute": autoscaling_compute,
             "autoscaling_disk": autoscaling_disk,
         }
 
-        if (
-            last_access_time
-            and last_access_time.replace(tzinfo=None) >= cutoff_date
-        ):
+        if last_access_time and last_access_time.replace(tzinfo=None) >= cutoff_date:
             cluster_unused = False
 
         if cluster_unused:
@@ -157,7 +162,12 @@ def generate_report(period):
     total_cost = 0.0
 
     with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-        futures = [executor.submit(process_project, project, env_patterns, csv_data, cutoff_date) for project in projects]
+        futures = [
+            executor.submit(
+                process_project, project, env_patterns, csv_data, cutoff_date
+            )
+            for project in projects
+        ]
         for future in futures:
             result = future.result()
             if result:
@@ -215,7 +225,9 @@ def generate_report(period):
     for project in report_data:
         for cluster in project["clusters"]:
             status = "Unused" if cluster["name"] in all_unused_clusters else "In Use"
-            autoscaling_compute = "Enabled" if cluster["autoscaling_compute"] else "Disabled"
+            autoscaling_compute = (
+                "Enabled" if cluster["autoscaling_compute"] else "Disabled"
+            )
             autoscaling_disk = "Enabled" if cluster["autoscaling_disk"] else "Disabled"
             table.add_row(
                 project["name"],
@@ -231,7 +243,14 @@ def generate_report(period):
     console.print(table)
 
 
-def render_html_report(data, total_clusters, percentage_no_autoscaling_compute, percentage_no_autoscaling_disk, percentage_unused_clusters, total_cost):
+def render_html_report(
+    data,
+    total_clusters,
+    percentage_no_autoscaling_compute,
+    percentage_no_autoscaling_disk,
+    percentage_unused_clusters,
+    total_cost,
+):
     """Render the HTML report using Jinja2 template."""
     env = Environment(loader=FileSystemLoader("mongone/templates"))
     template = env.get_template("report.html")
