@@ -96,6 +96,7 @@
                     <th>Cluster Name</th>
                     <th>Last Access Time</th>
                     <th>Status</th>
+                    <th>Cost (USD)</th>
                 </tr>
             </thead>
             <tbody>
@@ -103,7 +104,7 @@
                 <tr class="project-row" onclick="toggleClusters('{{ project.name }}')">
                     <td>{{ project.name }}</td>
                     <td>{{ project.environment }}</td>
-                    <td colspan="3">Click to expand/collapse clusters</td>
+                    <td colspan="4">Click to expand/collapse clusters</td>
                 </tr>
                 {% for cluster in project.clusters %}
                 <tr class="cluster-row" data-project="{{ project.name }}" style="display: table-row;">
@@ -112,6 +113,7 @@
                     <td>{{ cluster.name }}</td>
                     <td>{{ cluster.last_access_time }}</td>
                     <td style="color: {{ 'red' if cluster.name in unused_clusters else 'green' }}; font-weight: bold;">{{ 'Unused' if cluster.name in unused_clusters else 'In Use' }}</td>
+                    <td>${{ cluster.cost }}</td>
                 </tr>
                 {% endfor %}
                 {% endfor %}

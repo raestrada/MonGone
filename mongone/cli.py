@@ -1,55 +1,67 @@
 import os
-import re
 import click
 import yaml
 from datetime import datetime, timedelta
 from rich.console import Console
 from rich.table import Table
 from jinja2 import Environment, FileSystemLoader
-import requests
-from requests.auth import HTTPDigestAuth
-import dateutil.parser
+
+from mongone.clusters import fetch_cluster_last_access, fetch_clusters
+from mongone.invoices import get_latest_invoice_id, get_cluster_cost, fetch_invoice_csv
+from mongone.projects import fetch_projects
+from mongone.enviroments import detect_environment
 
 console = Console()
 
 CONFIG_FILE = "mongone.yaml"
 DEFAULT_PERIOD = 30  # days
-DEFAULT_ENV_PATTERNS = {
-    "staging": r".*staging.*",
-    "production": r".*production.*"
-}
+DEFAULT_ENV_PATTERNS = {"staging": r".*staging.*", "production": r".*production.*"}
+
 
 @click.group()
 def cli():
     """MonGone CLI - Optimize MongoDB Atlas usage and generate reports."""
     pass
 
+
 @cli.command()
-@click.option('--atlas_org_id', required=True, help='MongoDB Atlas Organization ID')
-@click.option('--report_period_days', default=DEFAULT_PERIOD, help='Default report period in days')
+@click.option("--atlas_org_id", required=True, help="MongoDB Atlas Organization ID")
+@click.option(
+    "--report_period_days", default=DEFAULT_PERIOD, help="Default report period in days"
+)
 def init(atlas_org_id, report_period_days):
     """Initialize the mongone configuration file."""
     config = {
         "atlas_org_id": atlas_org_id,
         "report_period_days": report_period_days,
-        "environment_patterns": DEFAULT_ENV_PATTERNS
+        "environment_patterns": DEFAULT_ENV_PATTERNS,
     }
     with open(CONFIG_FILE, "w") as file:
         yaml.dump(config, file)
-    console.print(f"Configuration file '{CONFIG_FILE}' created successfully.", style="bold green")
+    console.print(
+        f"Configuration file '{CONFIG_FILE}' created successfully.", style="bold green"
+    )
+
 
 @cli.command()
-@click.option('--period', default=DEFAULT_PERIOD, help='Period (in days) to consider databases as unused.')
+@click.option(
+    "--period",
+    default=DEFAULT_PERIOD,
+    help="Period (in days) to consider databases as unused.",
+)
 def generate_report(period):
     """Generate a usage report for all projects in the MongoDB Atlas organization."""
     # Load configuration
     if not os.path.exists(CONFIG_FILE):
-        console.print(f"Configuration file '{CONFIG_FILE}' not found. Run 'mongone init' first.", style="bold red")
+        console.print(
+            f"Configuration file '{CONFIG_FILE}' not found. Run 'mongone init' first.",
+            style="bold red",
+        )
         return
-    
+
     with open(CONFIG_FILE, "r") as file:
         config = yaml.safe_load(file)
-    
+
     atlas_org_id = config.get("atlas_org_id")
     env_patterns = config.get("environment_patterns", DEFAULT_ENV_PATTERNS)
 
@@ -58,10 +70,33 @@ def generate_report(period):
     projects = fetch_projects(atlas_org_id)
 
     if not projects:
-        console.print("No projects found in the organization or an error occurred.", style="bold red")
+        console.print(
+            "No projects found in the organization or an error occurred.",
+            style="bold red",
+        )
         return
 
-    console.print(f"[INFO] Found {len(projects)} projects. Fetching cluster information...", style="bold blue")
+    console.print(
+        f"[INFO] Found {len(projects)} projects. Fetching latest invoice ID...",
+        style="bold blue",
+    )
+    latest_invoice_id = get_latest_invoice_id(atlas_org_id)
+    if not latest_invoice_id:
+        console.print(
+            "[ERROR] Unable to retrieve the latest invoice ID.", style="bold red"
+        )
+        return
+
+    # Fetch the CSV data for the latest invoice
+    csv_data = fetch_invoice_csv(atlas_org_id, latest_invoice_id)
+    if not csv_data:
+        console.print("[ERROR] Unable to retrieve invoice CSV data.", style="bold red")
+        return
+
+    console.print(
+        f"[INFO] Found {len(projects)} projects. Fetching cluster information...",
+        style="bold blue",
+    )
     report_data = []
     unused_clusters = []
     cutoff_date = datetime.now().replace(tzinfo=None) - timedelta(days=period)
@@ -69,36 +104,53 @@ def generate_report(period):
     for project in projects:
         project_name = project["name"]
         environment = detect_environment(project_name, env_patterns)
-        console.print(f"[INFO] Fetching clusters for project: {project_name} (Environment: {environment})", style="bold blue")
+        console.print(
+            f"[INFO] Fetching clusters for project: {project_name} (Environment: {environment})",
+            style="bold blue",
+        )
         clusters = fetch_clusters(project["id"])
 
         if not clusters:
-            console.print(f"[WARNING] No clusters found for project: {project_name}", style="bold yellow")
+            console.print(
+                f"[WARNING] No clusters found for project: {project_name}",
+                style="bold yellow",
+            )
             continue
 
         project_report = {
             "name": project_name,
             "environment": environment,
-            "clusters": []
+            "clusters": [],
         }
 
         for cluster in clusters:
             cluster_name = cluster["name"]
-            console.print(f"[INFO] Fetching last access time for cluster: {cluster_name}", style="bold blue")
+            console.print(
+                f"[INFO] Fetching last access time for cluster: {cluster_name}",
+                style="bold blue",
+            )
             last_access_time = fetch_cluster_last_access(project["id"], cluster_name)
             cluster_unused = True
             cluster_report = {
                 "name": cluster_name,
-                "last_access_time": last_access_time.strftime("%Y-%m-%d %H:%M:%S") if last_access_time else "N/A",
-                "databases": []
+                "last_access_time": (
+                    last_access_time.strftime("%Y-%m-%d %H:%M:%S")
+                    if last_access_time
+                    else "N/A"
+                ),
+                "databases": [],
+                "cost": get_cluster_cost(csv_data, cluster_name),
             }
 
-            if last_access_time and last_access_time.replace(tzinfo=None) >= cutoff_date:
+            if (
+                last_access_time
+                and last_access_time.replace(tzinfo=None) >= cutoff_date
+            ):
                 cluster_unused = False
-            
+
             if cluster_unused:
                 unused_clusters.append(cluster_name)
-            
+
             project_report["clusters"].append(cluster_report)
 
         report_data.append(project_report)
@@ -114,85 +166,27 @@ def generate_report(period):
     table.add_column("Cluster Name", style="bold magenta")
     table.add_column("Last Access Time", style="bold green")
     table.add_column("Status", style="bold yellow")
+    table.add_column("Cost", style="bold red")
 
     for project in report_data:
         for cluster in project["clusters"]:
             status = "Unused" if cluster["name"] in unused_clusters else "In Use"
-            table.add_row(project["name"], project["environment"], cluster["name"], cluster["last_access_time"], status)
-    
+            table.add_row(
+                project["name"],
+                project["environment"],
+                cluster["name"],
+                cluster["last_access_time"],
+                status,
+                f"${cluster['cost']:.2f}",
+            )
+
     console.print(table)
 
 
-def make_request(url, params=None, data=None):
-    """Make an authenticated request to the MongoDB Atlas API."""
-    public_key = os.getenv("ATLAS_PUBLIC_KEY")
-    private_key = os.getenv("ATLAS_PRIVATE_KEY")
-
-    if not public_key or not private_key:
-        console.print("Atlas public or private key not found. Please set the ATLAS_PUBLIC_KEY and ATLAS_PRIVATE_KEY environment variables.", style="bold red")
-        return None
-
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/vnd.atlas.2024-08-05+json"
-    }
-    console.print(f"[DEBUG] Sending request to URL: {url}", style="bold blue")
-    response = requests.get(url, auth=HTTPDigestAuth(public_key, private_key), headers=headers, params=params, data=data)
-
-    if response.status_code != 200:
-        console.print(f"[ERROR] Failed to fetch data from URL: {url}", style="bold red")
-        console.print(f"[ERROR] Status Code: {response.status_code}, Response: {response.text}", style="bold red")
-        exit(1)
-
-    console.print(f"[INFO] Successfully fetched data from URL: {url}", style="bold green")
-    return response.json()
-
-def fetch_projects(org_id):
-    """Fetch project information from MongoDB Atlas organization."""
-    url = f"https://cloud.mongodb.com/api/atlas/v2/groups"
-    response = make_request(url)
-    if response:
-        console.print(f"[INFO] Successfully fetched {len(response.get('results', []))} projects.", style="bold green")
-        return response.get("results", [])
-    return []
-
-def fetch_clusters(project_id):
-    """Fetch cluster information from MongoDB Atlas project."""
-    url = f"https://cloud.mongodb.com/api/atlas/v2/groups/{project_id}/clusters"
-    response = make_request(url)
-    if response:
-        console.print(f"[INFO] Successfully fetched {len(response.get('results', []))} clusters for project ID: {project_id}.", style="bold green")
-        return response.get("results", [])
-    return []
-
-def fetch_cluster_last_access(project_id, cluster_name):
-    """Fetch the last access time for a specific cluster from MongoDB Atlas."""
-    url = f"https://cloud.mongodb.com/api/atlas/v2/groups/{project_id}/dbAccessHistory/clusters/{cluster_name}"
-    response = make_request(url)
-    if response and "accessLogs" in response and response["accessLogs"]:
-        # Sort by timestamp to find the most recent access
-        access_logs = sorted(response["accessLogs"], key=lambda x: x.get("timestamp", ""), reverse=True)
-        console.print(f"[DEBUG] Timestamp received: {access_logs[0]['timestamp']}", style="bold blue")
-        try:
-            # Attempt to parse the timestamp
-            return dateutil.parser.parse(access_logs[0]["timestamp"])
-        except (ValueError, TypeError):
-            console.print(f"[ERROR] Unable to parse timestamp: {access_logs[0]['timestamp']}", style="bold red")
-            return None
-    console.print(f"[WARNING] No access logs found for cluster: {cluster_name}", style="bold yellow")
-    return None
-
-def detect_environment(project_name, patterns):
-    """Detect the environment of a given project based on its name."""
-    for env, pattern in patterns.items():
-        if re.search(pattern, project_name, re.IGNORECASE):
-            return env
-    return "unknown"
-
 def render_html_report(data):
     """Render the HTML report using Jinja2 template."""
-    env = Environment(loader=FileSystemLoader('mongone/templates'))
-    template = env.get_template('report.html')
+    env = Environment(loader=FileSystemLoader("mongone/templates"))
+    template = env.get_template("report.html")
     output_from_parsed_template = template.render(projects=data)
 
     # Save the report in the 'reports' directory
@@ -200,11 +194,14 @@ def render_html_report(data):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    output_file_path = os.path.join(output_dir, f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html")
+    output_file_path = os.path.join(
+        output_dir, f"report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    )
     with open(output_file_path, "w") as f:
         f.write(output_from_parsed_template)
 
     console.print(f"Report generated: {output_file_path}", style="bold green")
+
 
 if __name__ == "__main__":
     cli()
