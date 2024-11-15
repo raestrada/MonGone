@@ -15,12 +15,14 @@ from mongone.clusters import (
 from mongone.invoices import get_latest_invoice_id, get_cluster_cost, fetch_invoice_csv
 from mongone.projects import fetch_projects
 from mongone.enviroments import detect_environment
+from mongone.plans import generate_plans
 
 console = Console()
 
 CONFIG_FILE = "mongone.yaml"
 DEFAULT_PERIOD = 30  # days
 DEFAULT_ENV_PATTERNS = {"staging": r".*staging.*", "production": r".*production.*"}
+FORCE_DATA_FILE = "force-data.yaml"
 
 
 def process_project(project, env_patterns, csv_data, cutoff_date):
@@ -84,7 +86,7 @@ def cli():
     "--report_period_days", default=DEFAULT_PERIOD, help="Default report period in days"
 )
 def init(atlas_org_id, report_period_days):
-    """Initialize the mongone configuration file."""
+    """Initialize the mongone configuration file and create an example force data file."""
     config = {
         "atlas_org_id": atlas_org_id,
         "report_period_days": report_period_days,
@@ -92,98 +94,189 @@ def init(atlas_org_id, report_period_days):
     }
     with open(CONFIG_FILE, "w") as file:
         yaml.dump(config, file)
+    console.print("[green]Configuration file 'mongone.yaml' created successfully.[/]")
+
+    # Create an example force-data.yaml file
+    example_force_data = {
+        "projects": [
+            {
+                "org_id": "example_org_id",
+                "project_id": "example_project_id",
+                "environment": "staging",
+                "clusters": [
+                    {
+                        "name": "example_cluster_1",
+                        "autoscaling_compute": False,
+                        "autoscaling_disk": False,
+                        "unused": True,
+                    },
+                    {
+                        "name": "example_cluster_2",
+                        "autoscaling_compute": True,
+                        "autoscaling_disk": True,
+                        "unused": False,
+                    },
+                ],
+            }
+        ]
+    }
+    with open(FORCE_DATA_FILE, "w") as file:
+        yaml.dump(example_force_data, file, default_flow_style=False)
     console.print(
-        f"Configuration file '{CONFIG_FILE}' created successfully.", style="bold green"
+        f"[green]Example force data file '{FORCE_DATA_FILE}' created successfully.[/]"
     )
 
 
 @cli.command()
 @click.option(
+    "--force",
+    is_flag=True,
+    help="Use force data file instead of fetching from MongoDB Atlas",
+)
+@click.option(
     "--period",
     default=DEFAULT_PERIOD,
     help="Period (in days) to consider databases as unused.",
 )
-def generate_report(period):
+def generate_report(force, period):
     """Generate a usage report for all projects in the MongoDB Atlas organization."""
-    # Load configuration
-    if not os.path.exists(CONFIG_FILE):
-        console.print(
-            f"Configuration file '{CONFIG_FILE}' not found. Run 'mongone init' first.",
-            style="bold red",
-        )
-        return
-
-    with open(CONFIG_FILE, "r") as file:
-        config = yaml.safe_load(file)
-
-    atlas_org_id = config.get("atlas_org_id")
-    env_patterns = config.get("environment_patterns", DEFAULT_ENV_PATTERNS)
-
-    console.print("[INFO] Fetching projects from MongoDB Atlas...", style="bold blue")
-    # Fetch projects from MongoDB Atlas organization
-    projects = fetch_projects(atlas_org_id)
-
-    if not projects:
-        console.print(
-            "No projects found in the organization or an error occurred.",
-            style="bold red",
-        )
-        return
-
-    console.print(
-        f"[INFO] Found {len(projects)} projects. Fetching latest invoice ID...",
-        style="bold blue",
-    )
-    latest_invoice_id = get_latest_invoice_id(atlas_org_id)
-    if not latest_invoice_id:
-        console.print(
-            "[ERROR] Unable to retrieve the latest invoice ID.", style="bold red"
-        )
-        return
-
-    # Fetch the CSV data for the latest invoice
-    csv_data = fetch_invoice_csv(atlas_org_id, latest_invoice_id)
-    if not csv_data:
-        console.print("[ERROR] Unable to retrieve invoice CSV data.", style="bold red")
-        return
-
-    console.print(
-        f"[INFO] Found {len(projects)} projects. Fetching cluster information...",
-        style="bold blue",
-    )
-    report_data = []
-    all_unused_clusters = []
-    cutoff_date = datetime.now().replace(tzinfo=None) - timedelta(days=period)
-
-    total_clusters = 0
-    clusters_without_autoscaling_compute = 0
-    clusters_without_autoscaling_disk = 0
-    unused_cluster_count = 0
-    total_cost = 0.0
-
-    with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
-        futures = [
-            executor.submit(
-                process_project, project, env_patterns, csv_data, cutoff_date
+    if force:
+        if not os.path.exists(FORCE_DATA_FILE):
+            console.print(f"[red]Force data file '{FORCE_DATA_FILE}' not found.[/]")
+            return
+        with open(FORCE_DATA_FILE, "r") as file:
+            report_data = yaml.safe_load(file)
+            console.print(f"[yellow]Using force data from:[/] {FORCE_DATA_FILE}")
+    else:
+        # Load configuration
+        if not os.path.exists(CONFIG_FILE):
+            console.print(
+                f"Configuration file '{CONFIG_FILE}' not found. Run 'mongone init' first.",
+                style="bold red",
             )
-            for project in projects
-        ]
-        for future in futures:
-            result = future.result()
-            if result:
-                project_report, unused_clusters = result
-                report_data.append(project_report)
-                all_unused_clusters.extend(unused_clusters)
+            return
 
-                for cluster in project_report["clusters"]:
-                    total_clusters += 1
-                    if not cluster["autoscaling_compute"]:
-                        clusters_without_autoscaling_compute += 1
-                    if not cluster["autoscaling_disk"]:
-                        clusters_without_autoscaling_disk += 1
-                    if cluster["name"] in unused_clusters:
-                        unused_cluster_count += 1
-                    total_cost += cluster["cost"]
+        with open(CONFIG_FILE, "r") as file:
+            config = yaml.safe_load(file)
+
+        atlas_org_id = config.get("atlas_org_id")
+        env_patterns = config.get("environment_patterns", DEFAULT_ENV_PATTERNS)
+
+        console.print(
+            "[INFO] Fetching projects from MongoDB Atlas...", style="bold blue"
+        )
+        # Fetch projects from MongoDB Atlas organization
+        projects = fetch_projects(atlas_org_id)
+
+        if not projects:
+            console.print(
+                "No projects found in the organization or an error occurred.",
+                style="bold red",
+            )
+            return
+
+        console.print(
+            f"[INFO] Found {len(projects)} projects. Fetching latest invoice ID...",
+            style="bold blue",
+        )
+        latest_invoice_id = get_latest_invoice_id(atlas_org_id)
+        if not latest_invoice_id:
+            console.print(
+                "[ERROR] Unable to retrieve the latest invoice ID.", style="bold red"
+            )
+            return
+
+        # Fetch the CSV data for the latest invoice
+        csv_data = fetch_invoice_csv(atlas_org_id, latest_invoice_id)
+        if not csv_data:
+            console.print(
+                "[ERROR] Unable to retrieve invoice CSV data.", style="bold red"
+            )
+            return
+
+        console.print(
+            f"[INFO] Found {len(projects)} projects. Fetching cluster information...",
+            style="bold blue",
+        )
+        report_data = []
+        all_unused_clusters = []
+        cutoff_date = datetime.now().replace(tzinfo=None) - timedelta(days=period)
+
+        total_clusters = 0
+        clusters_without_autoscaling_compute = 0
+        clusters_without_autoscaling_disk = 0
+        unused_cluster_count = 0
+        total_cost = 0.0
+
+        with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+            futures = [
+                executor.submit(
+                    process_project, project, env_patterns, csv_data, cutoff_date
+                )
+                for project in projects
+            ]
+            for future in futures:
+                result = future.result()
+                if result:
+                    project_report, unused_clusters = result
+                    report_data.append(project_report)
+                    all_unused_clusters.extend(unused_clusters)
+
+                    for cluster in project_report["clusters"]:
+                        total_clusters += 1
+                        if not cluster["autoscaling_compute"]:
+                            clusters_without_autoscaling_compute += 1
+                        if not cluster["autoscaling_disk"]:
+                            clusters_without_autoscaling_disk += 1
+                        if cluster["name"] in unused_clusters:
+                            unused_cluster_count += 1
+                        total_cost += cluster["cost"]
+
+    # Generate YAML plans from the report data
+    console.print("[INFO] Generating YAML plans...", style="bold blue")
+    generate_plans(
+        {
+            "clusters_to_activate_autoscaling_computation": {
+                env: [
+                    cluster["name"]
+                    for project in report_data
+                    for cluster in project["clusters"]
+                    if not cluster["autoscaling_compute"]
+                    and project["environment"] == env
+                ]
+                for env in ["staging", "production", "unknown"]
+            },
+            "clusters_to_activate_autoscaling_disk": {
+                env: [
+                    cluster["name"]
+                    for project in report_data
+                    for cluster in project["clusters"]
+                    if not cluster["autoscaling_disk"] and project["environment"] == env
+                ]
+                for env in ["staging", "production", "unknown"]
+            },
+            "clusters_to_scale_free_tier": {
+                env: [
+                    cluster["name"]
+                    for project in report_data
+                    for cluster in project["clusters"]
+                    if cluster["name"] in all_unused_clusters
+                    and project["environment"] == env
+                ]
+                for env in ["staging", "production", "unknown"]
+            },
+            "clusters_to_delete": {
+                env: [
+                    cluster["name"]
+                    for project in report_data
+                    for cluster in project["clusters"]
+                    if cluster["name"] in all_unused_clusters
+                    and project["environment"] == env
+                ]
+                for env in ["staging", "production", "unknown"]
+            },
+        }
+    )
 
     # Calculate percentages
     percentage_no_autoscaling_compute = (
@@ -241,7 +334,6 @@ def generate_report(period):
             )
 
     console.print(table)
-
 
 def render_html_report(
     data,
