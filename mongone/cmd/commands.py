@@ -72,9 +72,14 @@ def init(atlas_org_id, report_period_days):
     help="Use force data file instead of fetching from MongoDB Atlas",
 )
 @click.option(
+    "--test",
+    is_flag=True,
+    help="Use test data file instead of fetching from MongoDB Atlas",
+)
+@click.option(
     "--period", default=30, help="Period (in days) to consider databases as unused."
 )
-def generate_report(force, period):
+def generate_report(force, test, period):
     """Generate a usage report for all projects in the MongoDB Atlas organization."""
     if force:
         if not validate_file_exists("force-data.yaml"):
@@ -82,6 +87,15 @@ def generate_report(force, period):
             return
         # Load data from force-data.yaml
         with open("force-data.yaml", "r") as file:
+            data = yaml.safe_load(file)
+        # Ensure the data structure matches the expected format
+        data = transform_force_data_to_expected_structure(data)
+    elif test:
+        if not validate_file_exists("test-data.yaml"):
+            console.print(f"[red]Test data file 'test-data.yaml' not found.[/]")
+            return
+        # Load data from test-data.yaml
+        with open("test-data.yaml", "r") as file:
             data = yaml.safe_load(file)
         # Ensure the data structure matches the expected format
         data = transform_force_data_to_expected_structure(data)

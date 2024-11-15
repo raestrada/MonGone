@@ -122,15 +122,3 @@ def generate_plans(report_data):
         generate_autoscaling_disk_plan(report_data, environment)
         generate_scale_to_free_tier_plan(report_data, environment)
         generate_delete_clusters_plan(report_data, environment)
-
-
-if __name__ == "__main__":
-    # Load reports from the directory
-    REPORTS_DIR = "./reports"
-    for report_file in os.listdir(REPORTS_DIR):
-        if report_file.endswith(".yaml"):
-            report_path = os.path.join(REPORTS_DIR, report_file)
-            with open(report_path, "r") as file:
-                report_data = yaml.safe_load(file)
-                console.print(f"[yellow]Processing report:[/] {report_file}")
-                generate_plans(report_data)
