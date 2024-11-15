@@ -53,24 +53,24 @@ def fetch_invoice_csv(org_id, invoice_id):
     return csv_data
 
 
-def get_cluster_cost(csv_data, cluster_name):
+def get_cluster_cost(csv_data, project_name, cluster_name):
     """Fetch the total cost for a specific cluster from the provided CSV data."""
     csv_reader = csv.DictReader(StringIO(csv_data))
     total_cost = 0.0
     headers = csv_reader.fieldnames
-    if "Cluster" not in headers:
+    if "Cluster" not in headers or "Project" not in headers:
         console.print(
-            f"[ERROR] 'Cluster' column not found in CSV headers: {headers}",
+            f"[ERROR] 'Cluster' or 'Project' column not found in CSV headers: {headers}",
             style="bold red",
         )
         return total_cost
     for row in csv_reader:
-        if row.get("Cluster") == cluster_name:
+        if row.get("Cluster") == cluster_name and row.get("Project") == project_name:
             try:
                 total_cost += float(row.get("Amount", 0))
             except ValueError:
                 console.print(
-                    f"[ERROR] Unable to parse cost amount for cluster: {cluster_name}",
+                    f"[ERROR] Unable to parse cost amount for cluster: {cluster_name} in project: {project_name}",
                     style="bold red",
                 )
     return total_cost

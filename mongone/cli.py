@@ -48,7 +48,7 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
                 else "N/A"
             ),
             "databases": [],
-            "cost": get_cluster_cost(csv_data, cluster_name),
+            "cost": get_cluster_cost(csv_data, project_name, cluster_name),  # Updated to include project_name
             "autoscaling_compute": autoscaling_compute,
             "autoscaling_disk": autoscaling_disk,
         }
