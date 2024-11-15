@@ -72,6 +72,15 @@ mongone generate-report --period 30
 
 The report is generated in HTML format (`report_YYYYMMDD_HHMMSS.html`) and will provide detailed insights on your MongoDB Atlas organization.
 
+### Step 4: Generate and Execute an Optimization Plan
+MonGone also allows you to generate and execute an optimization plan to streamline your resource management.
+
+```sh
+mongone generate-plan --force-data true
+```
+
+- **`--force-data`**: When set to `true`, the tool will enforce a deeper analysis of the data to create a more accurate optimization plan.
+
 ---
 
 ## Understanding `mongone.yaml`
@@ -145,6 +154,10 @@ Initializes the `mongone.yaml` configuration file. Required options include:
 ### `mongone generate-report`
 Generates an HTML report for MongoDB Atlas resources.
 - **`--period`**: Defines the time window to consider resources as unused. Default is 30 days.
+
+### `mongone generate-plan`
+Generates an optimization plan for your MongoDB Atlas resources and optionally executes it.
+- **`--force-data`**: Forces an in-depth analysis of the resources to enhance the optimization plan.
 
 ---
 

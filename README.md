@@ -56,6 +56,29 @@ export ATLAS_PRIVATE_KEY=your_private_key
 ```
 These keys are needed for MonGone to interact with MongoDB Atlas and collect necessary information.
 
+#### 4. Generate Optimization Plans
+MonGone allows you to generate optimization plans to efficiently manage your resources:
+
+```sh
+mongone generate-plan
+```
+This command creates a plan to scale down or remove unused clusters, providing you with an actionable summary of suggested optimizations.
+
+To apply these plans automatically, use:
+
+```sh
+mongone execute-plan --force
+```
+The `--force` flag allows MonGone to proceed with the changes without further confirmation.
+
+### Force Data Option
+To override data checks and force an action, you can use the `--force-data` option with the generate-report or generate-plan commands:
+
+```sh
+mongone generate-report --period 30 --force-data
+```
+This forces the tool to regenerate all data, ignoring any cached information.
+
 ## Documentation
 For detailed guidance and more examples, check out the [MonGone Documentation](https://raestrada.github.io/mongone/docs.html).
 
