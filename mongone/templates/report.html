@@ -43,30 +43,40 @@
         }
 
         .summary {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
             background-color: #ffffff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             padding: 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        .tile {
+            flex: 1 1 180px;
+            min-width: 150px;
+            max-width: 220px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
 
-        .summary-item {
-            flex: 1;
-        }
-
-        .summary-item h2 {
-            font-size: 1.2em;
+        .tile h4 {
+            font-size: 1em;
             color: #007bff;
-            margin: 0;
+            margin-bottom: 10px;
+            font-weight: normal;
         }
 
-        .summary-item p {
+        .tile p {
             font-size: 1.5em;
+            font-weight: bold;
+            margin: 0;
             color: #333;
-            margin: 5px 0 0;
         }
 
         table {
@@ -76,7 +86,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        th, td {
+        th,
+        td {
             border: 1px solid #dee2e6;
             padding: 15px;
             text-align: left;
@@ -137,7 +148,7 @@
                         let yContent = y.innerHTML.trim();
 
                         // Si estamos ordenando la columna de costos, eliminamos el símbolo de moneda y convertimos a número.
-                        if (n === 7) {  // Índice de la columna de costos
+                        if (n === 7) { // Índice de la columna de costos
                             xContent = parseFloat(xContent.replace(/[^0-9.-]+/g, ""));
                             yContent = parseFloat(yContent.replace(/[^0-9.-]+/g, ""));
                         }
@@ -186,29 +197,31 @@
             <h1>MongoDB Atlas Usage Report</h1>
         </header>
 
+        <!-- Summary Section -->
         <div class="summary">
-            <div class="summary-item">
-                <h2>Total Clusters</h2>
+            <div class="tile">
+                <h4>Total Clusters</h4>
                 <p>{{ total_clusters }}</p>
             </div>
-            <div class="summary-item">
-                <h2>Clusters Without Compute Autoscaling</h2>
+            <div class="tile">
+                <h4>No Compute Autoscaling</h4>
                 <p>{{ percentage_no_autoscaling_compute }}%</p>
             </div>
-            <div class="summary-item">
-                <h2>Clusters Without Disk Autoscaling</h2>
+            <div class="tile">
+                <h4>No Disk Autoscaling</h4>
                 <p>{{ percentage_no_autoscaling_disk }}%</p>
             </div>
-            <div class="summary-item">
-                <h2>Clusters Not In Use</h2>
+            <div class="tile">
+                <h4>Not In Use</h4>
                 <p>{{ percentage_unused_clusters }}%</p>
             </div>
-            <div class="summary-item">
-                <h2>Total Cost (USD)</h2>
-                <p>${{ total_cost }}</p>
+            <div class="tile">
+                <h4>Total Cost (USD)</h4>
+                <p>${{ total_cost | round(2) }}</p>
             </div>
         </div>
 
+        <!-- Data Table -->
         <table>
             <thead>
                 <tr>
