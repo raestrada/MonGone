@@ -166,3 +166,66 @@ def generate_report_logic(config, period):
         "total_cost": total_cost,
         "all_unused_clusters": all_unused_clusters,
     }
+
+def transform_force_data_to_expected_structure(raw_data, period=30):
+    """
+    Transforms the data loaded from 'force-data.yaml' to match the expected structure for the report,
+    including calculating metrics like total clusters, clusters without autoscaling, and total cost.
+    """
+    transformed_data = []
+    all_unused_clusters = []
+    total_clusters = 0
+    clusters_without_autoscaling_compute = 0
+    clusters_without_autoscaling_disk = 0
+    unused_cluster_count = 0
+    total_cost = 0.0
+
+    cutoff_date = datetime.now().replace(tzinfo=None) - timedelta(days=period)
+
+    for project in raw_data.get('projects', []):
+        project_report = {
+            "name": project.get("name"),
+            "environment": project.get("environment", "unknown"),
+            "clusters": []
+        }
+        
+        for cluster in project.get("clusters", []):
+            last_access_time = cluster.get("last_access_time")
+            cluster_unused = True if not last_access_time or last_access_time == "N/A" else False
+            if last_access_time and last_access_time != "N/A":
+                last_access_time = datetime.strptime(last_access_time, "%Y-%m-%dT%H:%M:%S")
+                if last_access_time.replace(tzinfo=None) >= cutoff_date:
+                    cluster_unused = False
+
+            cluster_report = {
+                "name": cluster.get("name"),
+                "last_access_time": cluster.get("last_access_time", "N/A"),
+                "databases": cluster.get("databases", []),
+                "cost": cluster.get("cost", 0),
+                "autoscaling_compute": cluster.get("autoscaling_compute", False),
+                "autoscaling_disk": cluster.get("autoscaling_disk", False)
+            }
+            project_report["clusters"].append(cluster_report)
+
+            # Update metrics
+            total_clusters += 1
+            if not cluster_report["autoscaling_compute"]:
+                clusters_without_autoscaling_compute += 1
+            if not cluster_report["autoscaling_disk"]:
+                clusters_without_autoscaling_disk += 1
+            if cluster_unused:
+                unused_cluster_count += 1
+                all_unused_clusters.append(cluster_report["name"])
+            total_cost += cluster_report["cost"]
+        
+        transformed_data.append(project_report)
+
+    return {
+        "report_data": transformed_data,
+        "total_clusters": total_clusters,
+        "clusters_without_autoscaling_compute": clusters_without_autoscaling_compute,
+        "clusters_without_autoscaling_disk": clusters_without_autoscaling_disk,
+        "unused_cluster_count": unused_cluster_count,
+        "total_cost": total_cost,
+        "all_unused_clusters": all_unused_clusters,
+    }

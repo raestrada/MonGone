@@ -1,6 +1,7 @@
 import click
+import yaml
 from mongone.core.config import load_config, save_config
-from mongone.core.report_generator import generate_report_logic
+from mongone.core.report_generator import generate_report_logic, transform_force_data_to_expected_structure
 from mongone.utils.rendering import render_html_report, display_summary
 from mongone.utils.helpers import validate_file_exists, Console
 
@@ -28,8 +29,37 @@ def init(atlas_org_id, report_period_days):
     }
     save_config(config)
     console.print("[green]Configuration file 'mongone.yaml' created successfully.[/]")
-    # Additional logic for generating force-data.yaml if required
 
+    # Create example 'force-data.yaml' for generating sample data
+    force_data_example = {
+        "projects": [
+            {
+                "name": "Example Project",
+                "environment": "staging",
+                "clusters": [
+                    {
+                        "name": "example-cluster-1",
+                        "last_access_time": "2024-01-01T12:00:00",
+                        "autoscaling_compute": False,
+                        "autoscaling_disk": True,
+                        "cost": 100.0,
+                    },
+                    {
+                        "name": "example-cluster-2",
+                        "last_access_time": None,
+                        "autoscaling_compute": True,
+                        "autoscaling_disk": False,
+                        "cost": 150.0,
+                    },
+                ],
+            }
+        ]
+    }
+
+    with open("force-data.yaml", "w") as file:
+        yaml.dump(force_data_example, file)
+    
+    console.print("[green]Example 'force-data.yaml' file created successfully.[/]")
 
 @cli.command()
 @click.option(
@@ -46,7 +76,11 @@ def generate_report(force, period):
         if not validate_file_exists("force-data.yaml"):
             console.print(f"[red]Force data file 'force-data.yaml' not found.[/]")
             return
-        # Logic for using force data
+        # Load data from force-data.yaml
+        with open("force-data.yaml", "r") as file:
+            data = yaml.safe_load(file)
+        # Ensure the data structure matches the expected format
+        data = transform_force_data_to_expected_structure(data)
     else:
         config = load_config()
         data = generate_report_logic(config, period)
@@ -55,7 +89,6 @@ def generate_report(force, period):
     render_html_report(data)
     # Display summary in the console
     display_summary(data)
-
 
 if __name__ == "__main__":
     cli()
