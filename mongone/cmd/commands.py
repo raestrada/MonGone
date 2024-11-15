@@ -7,6 +7,7 @@ from mongone.core.report_generator import (
 )
 from mongone.utils.rendering import render_html_report, display_summary
 from mongone.utils.helpers import validate_file_exists, Console
+from mongone.optimization.plans import generate_plans
 
 console = Console()
 
@@ -81,6 +82,8 @@ def init(atlas_org_id, report_period_days):
 )
 def generate_report(force, test, period):
     """Generate a usage report for all projects in the MongoDB Atlas organization."""
+    config = load_config()
+    
     if force:
         if not validate_file_exists("force-data.yaml"):
             console.print(f"[red]Force data file 'force-data.yaml' not found.[/]")
@@ -100,11 +103,13 @@ def generate_report(force, test, period):
         # Ensure the data structure matches the expected format
         data = transform_force_data_to_expected_structure(data)
     else:
-        config = load_config()
         data = generate_report_logic(config, period)
 
     # Render the HTML report
     render_html_report(data)
+
+    generate_plans(config, data)
+
     # Display summary in the console
     display_summary(data)
 

@@ -113,50 +113,6 @@ def generate_report_logic(config, period):
                         unused_cluster_count += 1
                     total_cost += cluster["cost"]
 
-    generate_plans(
-        {
-            "clusters_to_activate_autoscaling_computation": {
-                env: [
-                    cluster["name"]
-                    for project in report_data
-                    for cluster in project["clusters"]
-                    if not cluster["autoscaling_compute"]
-                    and project["environment"] == env
-                ]
-                for env in ["staging", "production", "unknown"]
-            },
-            "clusters_to_activate_autoscaling_disk": {
-                env: [
-                    cluster["name"]
-                    for project in report_data
-                    for cluster in project["clusters"]
-                    if not cluster["autoscaling_disk"] and project["environment"] == env
-                ]
-                for env in ["staging", "production", "unknown"]
-            },
-            "clusters_to_scale_free_tier": {
-                env: [
-                    cluster["name"]
-                    for project in report_data
-                    for cluster in project["clusters"]
-                    if cluster["name"] in all_unused_clusters
-                    and project["environment"] == env
-                ]
-                for env in ["staging", "production", "unknown"]
-            },
-            "clusters_to_delete": {
-                env: [
-                    cluster["name"]
-                    for project in report_data
-                    for cluster in project["clusters"]
-                    if cluster["name"] in all_unused_clusters
-                    and project["environment"] == env
-                ]
-                for env in ["staging", "production", "unknown"]
-            },
-        }
-    )
-
     return {
         "report_data": report_data,
         "total_clusters": total_clusters,
