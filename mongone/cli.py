@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from rich.console import Console
 from rich.table import Table
 from jinja2 import Environment, FileSystemLoader
-
+from concurrent.futures import ThreadPoolExecutor
+import multiprocessing
 from mongone.clusters import fetch_cluster_last_access, fetch_clusters
 from mongone.invoices import get_latest_invoice_id, get_cluster_cost, fetch_invoice_csv
 from mongone.projects import fetch_projects
@@ -16,6 +17,51 @@ console = Console()
 CONFIG_FILE = "mongone.yaml"
 DEFAULT_PERIOD = 30  # days
 DEFAULT_ENV_PATTERNS = {"staging": r".*staging.*", "production": r".*production.*"}
+
+
+def process_project(project, env_patterns, csv_data, cutoff_date):
+    project_name = project["name"]
+    environment = detect_environment(project_name, env_patterns)
+    clusters = fetch_clusters(project["id"])
+
+    if not clusters:
+        return None
+
+    project_report = {
+        "name": project_name,
+        "environment": environment,
+        "clusters": [],
+    }
+
+    unused_clusters = []
+
+    for cluster in clusters:
+        cluster_name = cluster["name"]
+        last_access_time = fetch_cluster_last_access(project["id"], cluster_name)
+        cluster_unused = True
+        cluster_report = {
+            "name": cluster_name,
+            "last_access_time": (
+                last_access_time.strftime("%Y-%m-%d %H:%M:%S")
+                if last_access_time
+                else "N/A"
+            ),
+            "databases": [],
+            "cost": get_cluster_cost(csv_data, cluster_name),
+        }
+
+        if (
+            last_access_time
+            and last_access_time.replace(tzinfo=None) >= cutoff_date
+        ):
+            cluster_unused = False
+
+        if cluster_unused:
+            unused_clusters.append(cluster_name)
+
+        project_report["clusters"].append(cluster_report)
+
+    return project_report, unused_clusters
 
 
 @click.group()
@@ -98,62 +144,17 @@ def generate_report(period):
         style="bold blue",
     )
     report_data = []
-    unused_clusters = []
+    all_unused_clusters = []
     cutoff_date = datetime.now().replace(tzinfo=None) - timedelta(days=period)
 
-    for project in projects:
-        project_name = project["name"]
-        environment = detect_environment(project_name, env_patterns)
-        console.print(
-            f"[INFO] Fetching clusters for project: {project_name} (Environment: {environment})",
-            style="bold blue",
-        )
-        clusters = fetch_clusters(project["id"])
-
-        if not clusters:
-            console.print(
-                f"[WARNING] No clusters found for project: {project_name}",
-                style="bold yellow",
-            )
-            continue
-
-        project_report = {
-            "name": project_name,
-            "environment": environment,
-            "clusters": [],
-        }
-
-        for cluster in clusters:
-            cluster_name = cluster["name"]
-            console.print(
-                f"[INFO] Fetching last access time for cluster: {cluster_name}",
-                style="bold blue",
-            )
-            last_access_time = fetch_cluster_last_access(project["id"], cluster_name)
-            cluster_unused = True
-            cluster_report = {
-                "name": cluster_name,
-                "last_access_time": (
-                    last_access_time.strftime("%Y-%m-%d %H:%M:%S")
-                    if last_access_time
-                    else "N/A"
-                ),
-                "databases": [],
-                "cost": get_cluster_cost(csv_data, cluster_name),
-            }
-
-            if (
-                last_access_time
-                and last_access_time.replace(tzinfo=None) >= cutoff_date
-            ):
-                cluster_unused = False
-
-            if cluster_unused:
-                unused_clusters.append(cluster_name)
-
-            project_report["clusters"].append(cluster_report)
-
-        report_data.append(project_report)
+    with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
+        futures = [executor.submit(process_project, project, env_patterns, csv_data, cutoff_date) for project in projects]
+        for future in futures:
+            result = future.result()
+            if result:
+                project_report, unused_clusters = result
+                report_data.append(project_report)
+                all_unused_clusters.extend(unused_clusters)
 
     # Render the HTML report using Jinja2
     console.print("[INFO] Rendering HTML report...", style="bold blue")
@@ -170,7 +171,7 @@ def generate_report(period):
 
     for project in report_data:
         for cluster in project["clusters"]:
-            status = "Unused" if cluster["name"] in unused_clusters else "In Use"
+            status = "Unused" if cluster["name"] in all_unused_clusters else "In Use"
             table.add_row(
                 project["name"],
                 project["environment"],
