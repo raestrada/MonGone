@@ -168,10 +168,6 @@ Initializes the `mongone.yaml` configuration file. Required options include:
 Generates an HTML report for MongoDB Atlas resources.
 - **`--period`**: Defines the time window to consider resources as unused. Default is 30 days.
 
-### `mongone generate-plan`
-Generates an optimization plan for your MongoDB Atlas resources and optionally executes it.
-- **`--force-data`**: Forces an in-depth analysis of the resources to enhance the optimization plan.
-
 ### `mongone execute-plan`
 Executes the generated optimization plan, scaling down unused resources and enabling auto-scaling for clusters as needed.
 

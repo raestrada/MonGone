@@ -57,13 +57,7 @@ export ATLAS_PRIVATE_KEY=your_private_key
 These keys are needed for MonGone to interact with MongoDB Atlas and collect necessary information.
 
 #### 4. Generate Optimization Plans
-MonGone allows you to generate optimization plans to efficiently manage your resources:
-
-```sh
-mongone generate-plan
-```
-This command creates a plan to scale down or remove unused clusters, providing you with an actionable summary of suggested optimizations.
-
+MonGone allows you to generate optimization plans to efficiently manage your resources. The plans are genrating automatically within the report genration.
 To apply these plans automatically, use:
 
 ```sh
