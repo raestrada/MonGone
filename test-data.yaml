@@ -8,16 +8,19 @@ projects:
         autoscaling_compute: false
         autoscaling_disk: true
         cost: 100.0
+        inuse: true
       - name: "cluster-staging-no-disk-autoscaling"
         last_access_time: "2024-01-02T12:00:00"
         autoscaling_compute: true
         autoscaling_disk: false
         cost: 150.0
+        inuse: true
       - name: "cluster-staging-unused"
         last_access_time: null
         autoscaling_compute: true
         autoscaling_disk: true
         cost: 200.0
+        inuse: false
   - id: "example_project_id_2"
     name: "Production Project"
     environment: "production"
@@ -27,13 +30,16 @@ projects:
         autoscaling_compute: false
         autoscaling_disk: true
         cost: 300.0
+        inuse: true
       - name: "cluster-production-no-disk-autoscaling"
         last_access_time: "2024-01-04T12:00:00"
         autoscaling_compute: true
         autoscaling_disk: false
         cost: 400.0
+        inuse: true
       - name: "cluster-production-unused"
         last_access_time: null
         autoscaling_compute: true
         autoscaling_disk: true
         cost: 500.0
+        inuse: false

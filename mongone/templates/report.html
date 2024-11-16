@@ -247,8 +247,8 @@
                     <td>{{ project.environment }}</td>
                     <td>{{ cluster.name }}</td>
                     <td>{{ cluster.last_access_time if cluster.last_access_time is not none else 'N/A' }}</td>
-                    <td class="{{ 'unknown' if cluster.last_access_time is none else ('unused' if cluster.name in unused_clusters else 'in-use') }}">
-                        {{ 'Unknown' if cluster.last_access_time is none else ('Unused' if cluster.name in unused_clusters else 'In Use') }}
+                    <td class="{{ 'unknown' if cluster.last_access_time is none else ('in-use' if cluster.inuse else 'unused') }}">
+                        {{ 'Unknown' if cluster.last_access_time is none else ('In Use' if cluster.inuse else 'Unused') }}
                     </td>
                     <td class="{{ 'autoscaling-enabled' if cluster.autoscaling_compute else 'autoscaling-disabled' }}">
                         {{ 'Enabled' if cluster.autoscaling_compute else 'Disabled' }}

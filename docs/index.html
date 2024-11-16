@@ -96,6 +96,23 @@
             border-radius: 3px;
         }
 
+        .warning-message {
+            background-color: #ff4c4c; /* Red with a softer shade for better visibility */
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-icon {
+            font-size: 1.5em;
+        }
+
         .screenshot {
             display: flex;
             justify-content: center;
@@ -169,7 +186,11 @@
         <div class="feature-installation">
             <h3>Effortless Installation</h3>
             <p>Install MonGone quickly using <code>pipx</code>:</p>
-            <p><code>pipx install git+https://github.com/raestrada/MonGone.git@v0.3.0</code></p>
+            <p><code>pipx install git+https://github.com/raestrada/MonGone.git@v0.4.0</code></p>
+            <div class="warning-message">
+                <span class="warning-icon">⚠️</span>
+                <span>Warning:</span> MonGone is currently in an experimental phase. The report generation features are safe to use, but please exercise caution with optimization actions, especially those involving deletion or resource scaling. Understand the tool and verify your MongoDB setup carefully before proceeding.
+            </div>
         </div>
 
         <div class="screenshot">

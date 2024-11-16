@@ -9,6 +9,9 @@ MonGone is an open-source CLI tool designed to streamline your MongoDB Atlas env
 
 Visit the [MonGone Home Page](https://raestrada.github.io/mongone/) for more information.
 
+## 🚨 Warning: Please Read Carefully
+MonGone is currently in an experimental phase. The report generation features are safe to use, but **please exercise caution** with optimization actions, especially those involving **deletion** or resource scaling. Make sure you understand the tool thoroughly and verify your MongoDB setup carefully before executing any optimization commands.
+
 ## Key Features
 - 🚒 **Effortless Installation**: Get MonGone up and running in seconds with `pipx`.
 - 🚀 **Zero to Optimal**: Detect and manage unused MongoDB clusters and databases, scaling them to zero or removing them entirely.
@@ -20,7 +23,7 @@ Visit the [MonGone Home Page](https://raestrada.github.io/mongone/) for more inf
 Install MonGone directly from GitHub using `pipx`:
 
 ```sh
-pipx install git+https://github.com/raestrada/MonGone.git@v0.3.0
+pipx install git+https://github.com/raestrada/MonGone.git@v0.4.0
 ```
 
 ### Usage
@@ -44,6 +47,8 @@ With the configuration set, generate a detailed report of your MongoDB Atlas res
 mongone generate-report --period 30
 ```
 - **`--period`**: Specifies the number of days to consider databases as unused (default is 30).
+- **`--force`**: Forcefully generates a report using the latest available data, overriding existing cached information.
+- **`--test`**: Uses test data instead of fetching live data from MongoDB Atlas, useful for development and testing purposes.
 
 The report is generated in HTML format, presenting the current state of all projects, clusters, and databases within your organization.
 
@@ -57,21 +62,14 @@ export ATLAS_PRIVATE_KEY=your_private_key
 These keys are needed for MonGone to interact with MongoDB Atlas and collect necessary information.
 
 #### 4. Generate Optimization Plans
-MonGone allows you to generate optimization plans to efficiently manage your resources. The plans are genrating automatically within the report genration.
-To apply these plans automatically, use:
-
-```sh
-mongone execute-plan --force
-```
-The `--force` flag allows MonGone to proceed with the changes without further confirmation.
+MonGone allows you to generate optimization plans to efficiently manage your resources. The plans are generated automatically when you generate a report.
 
 #### 5. Execute the Optimization Plan
 Once an optimization plan is generated, you can execute it using the following command:
 
 ```sh
-mongone execute-plan
+mongone execute
 ```
-
 This command will execute the actions defined in the optimization plan, such as scaling down unused resources or enabling auto-scaling for clusters. The process is straightforward and automated, allowing you to quickly optimize your MongoDB environment with minimal manual intervention.
 
 ![Execute Optimization Plan Example](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731724625/mongone-execute_xbdq6l.png)
@@ -79,12 +77,19 @@ This command will execute the actions defined in the optimization plan, such as 
 The screenshot above shows an example of executing an optimization plan, highlighting the actions taken by MonGone to improve resource utilization and reduce costs.
 
 ### Force Data Option
-To override data checks and force an action, you can use the `--force-data` option with the generate-report or generate-plan commands:
+To override data checks and force an action, you can use the `--force` option with the `generate-report` command:
 
 ```sh
-mongone generate-report --period 30 --force-data
+mongone generate-report --period 30 --force
 ```
 This forces the tool to regenerate all data, ignoring any cached information.
+
+To use test data, add the `--test` option:
+
+```sh
+mongone generate-report --period 30 --test
+```
+This is helpful for development and testing purposes without making changes to actual MongoDB instances.
 
 ## Documentation
 For detailed guidance and more examples, check out the [MonGone Documentation](https://raestrada.github.io/MonGone/docs.html).

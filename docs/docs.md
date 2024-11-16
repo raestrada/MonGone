@@ -12,13 +12,13 @@ MonGone can be easily installed using `pipx`. Follow the steps below:
 ### Installation via `pipx`
 
 ```sh
-pipx install git+https://github.com/raestrada/MonGone.git@v0.3.0
+pipx install git+https://github.com/raestrada/MonGone.git@v0.4.0
 ```
 
 Alternatively, you can use `pip` if `pipx` is not available:
 
 ```sh
-pip install git+https://github.com/raestrada/MonGone.git@v0.3.0
+pip install git+https://github.com/raestrada/MonGone.git@v0.4.0
 ```
 
 Once installed, you can verify the installation by running:
@@ -72,27 +72,14 @@ mongone generate-report --period 30
 
 The report is generated in HTML format (`report_YYYYMMDD_HHMMSS.html`) and will provide detailed insights on your MongoDB Atlas organization.
 
-### Step 4: Generate and Execute an Optimization Plan
-MonGone also allows you to generate and execute an optimization plan to streamline your resource management.
+### Step 4: Execute an Optimization Plan
+After generating a report, MonGone also allows you to execute an optimization plan to streamline your resource management.
 
 ```sh
-mongone generate-plan --force-data true
+mongone execute
 ```
 
-- **`--force-data`**: When set to `true`, the tool will enforce a deeper analysis of the data to create a more accurate optimization plan.
-
-### Step 5: Execute the Optimization Plan
-Once an optimization plan is generated, you can execute it using the following command:
-
-```sh
-mongone execute-plan
-```
-
-This command will execute the actions defined in the optimization plan, such as scaling down unused resources or enabling auto-scaling for clusters. The process is straightforward and automated, allowing you to quickly optimize your MongoDB environment with minimal manual intervention.
-
-![Execute Optimization Plan Example](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731724625/mongone-execute_xbdq6l.png)
-
-The screenshot above shows an example of executing an optimization plan, highlighting the actions taken by MonGone to improve resource utilization and reduce costs.
+This command will execute the actions defined in the generated optimization plan, such as scaling down unused resources or enabling auto-scaling for clusters. Ensure you review the generated plan carefully before execution, as some actions (like deleting clusters) may have a significant impact.
 
 ---
 
@@ -167,9 +154,11 @@ Initializes the `mongone.yaml` configuration file. Required options include:
 ### `mongone generate-report`
 Generates an HTML report for MongoDB Atlas resources.
 - **`--period`**: Defines the time window to consider resources as unused. Default is 30 days.
+- **`--force`**: Forces the generation of a new report, ignoring existing data.
+- **`--test`**: Uses `test-data.yaml` instead of fetching data from MongoDB Atlas, useful for testing.
 
-### `mongone execute-plan`
-Executes the generated optimization plan, scaling down unused resources and enabling auto-scaling for clusters as needed.
+### `mongone execute`
+Executes the generated optimization plan, scaling down unused resources and enabling auto-scaling for clusters as needed. Make sure to carefully review the plan before execution.
 
 ---
 
@@ -187,6 +176,11 @@ Make sure that the value of `report_period_days` matches your expectations for i
 
 ### How can I customize the environment patterns?
 You can modify the `environment_patterns` in `mongone.yaml` to use any custom regex that matches your project naming conventions.
+
+---
+
+## Warning
+⚠️ **Warning**: The execution phase of MonGone involves operations that may be destructive, especially when deleting clusters. Please ensure you understand the generated plan before proceeding with execution. The report and plan generation phases are safe to use for analysis, but take caution with optimizations and read the documentation thoroughly.
 
 ---
 

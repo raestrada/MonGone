@@ -36,7 +36,14 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
     for cluster in clusters:
         cluster_name = cluster["name"]
         last_access_time = fetch_cluster_last_access(project["id"], cluster_name)
+
         cluster_unused = True
+        if last_access_time and last_access_time.replace(tzinfo=None) >= cutoff_date:
+            cluster_unused = False
+
+        if cluster_unused:
+            unused_clusters.append(cluster_name)
+
         autoscaling_compute, autoscaling_disk = is_cluster_autoscaling(
             project["id"], cluster_name
         )
@@ -50,13 +57,8 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
             "cost": get_cluster_cost(csv_data, project_name, cluster_name),
             "autoscaling_compute": autoscaling_compute,
             "autoscaling_disk": autoscaling_disk,
+            "inuse": not cluster_unused,
         }
-
-        if last_access_time and last_access_time.replace(tzinfo=None) >= cutoff_date:
-            cluster_unused = False
-
-        if cluster_unused:
-            unused_clusters.append(cluster_name)
 
         project_report["clusters"].append(cluster_report)
 
@@ -168,6 +170,7 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
                 "cost": cluster.get("cost", 0),
                 "autoscaling_compute": cluster.get("autoscaling_compute", False),
                 "autoscaling_disk": cluster.get("autoscaling_disk", False),
+                "inuse": cluster.get("inuse", True),
             }
             project_report["clusters"].append(cluster_report)
 

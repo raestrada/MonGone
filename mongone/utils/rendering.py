@@ -61,7 +61,7 @@ def display_summary(data):
 
     for project in report_data:
         for cluster in project["clusters"]:
-            status = "Unused" if cluster["name"] in all_unused_clusters else "In Use"
+            status = "In Use" if cluster["inuse"]  else "Unused"
             autoscaling_compute = (
                 "Enabled" if cluster["autoscaling_compute"] else "Disabled"
             )
