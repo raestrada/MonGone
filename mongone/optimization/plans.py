@@ -79,7 +79,7 @@ def generate_scale_to_free_tier_plan(config, report_data, environment):
         for project in report_data.get("report_data", [])
         if project.get("environment") == environment
         for cluster in project.get("clusters", [])
-        if cluster.get("name") in report_data.get("all_unused_clusters", [])
+        if not cluster.get("inuse")
     ]
     if clusters:
         plan_data = {
@@ -103,7 +103,7 @@ def generate_delete_clusters_plan(config, report_data, environment):
         for project in report_data.get("report_data", [])
         if project.get("environment") == environment
         for cluster in project.get("clusters", [])
-        if cluster.get("name") in report_data.get("all_unused_clusters", [])
+        if not cluster.get("inuse")
     ]
     if clusters:
         plan_data = {
