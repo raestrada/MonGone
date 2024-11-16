@@ -37,7 +37,9 @@ def generate_autoscaling_computation_plan(config, report_data, environment):
     ]
     if clusters:
         plan_data = {
-            "action": "activate_autoscaling_computation",
+            "action": "autoscaling_computation",
+            "environment": environment,
+            "timestamp": datetime.datetime.now().isoformat(),
             "clusters": clusters,
         }
         write_yaml_file("autoscaling_computation", environment, plan_data)
@@ -60,7 +62,9 @@ def generate_autoscaling_disk_plan(config, report_data, environment):
     ]
     if clusters:
         plan_data = {
-            "action": "activate_autoscaling_disk",
+            "action": "autoscaling_disk",
+            "environment": environment,
+            "timestamp": datetime.datetime.now().isoformat(),
             "clusters": clusters,
         }
         write_yaml_file("autoscaling_disk", environment, plan_data)
@@ -85,6 +89,8 @@ def generate_scale_to_free_tier_plan(config, report_data, environment):
         plan_data = {
             "action": "scale_to_free_tier",
             "remove_autoscaling": True,
+            "environment": environment,
+            "timestamp": datetime.datetime.now().isoformat(),
             "clusters": clusters,
         }
         write_yaml_file("scale_to_free_tier", environment, plan_data)
@@ -108,6 +114,8 @@ def generate_delete_clusters_plan(config, report_data, environment):
     if clusters:
         plan_data = {
             "action": "delete_clusters",
+            "environment": environment,
+            "timestamp": datetime.datetime.now().isoformat(),
             "clusters": clusters,
         }
         write_yaml_file("delete_clusters", environment, plan_data)
@@ -131,4 +139,3 @@ def generate_plans(config, report_data):
         # Print message only if no plans were generated for the environment
         if not plans_generated:
             console.print(f"[blue]No clusters found for any plans in environment {environment}. Skipping plan generation.[/]")
-

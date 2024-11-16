@@ -1,5 +1,6 @@
 import os
 import yaml
+import sys
 from rich.console import Console
 from mongone.utils.http import make_request
 from mongone.core.config import load_config
@@ -17,6 +18,23 @@ def execute_plan(plan_type, environment, plan_filename):
 
     with open(plan_filename, "r") as plan_file:
         plan_data = yaml.safe_load(plan_file)
+
+    # Verify plan metadata matches the provided context
+    if plan_data.get("environment", "").lower() != environment.lower() or plan_data.get("action", "") != plan_type:
+        console.print(f"[red]Mismatch in plan metadata. Expected environment: {environment.capitalize()}, action: {plan_type}. Aborting execution.[/]")
+        console.print(f"[red]Compared with plan metadata: Environment: {plan_data.get('environment')}, Action: {plan_data.get('action')}[/]")
+        console.print("[red]Execution aborted due to metadata mismatch.[/]")
+        sys.exit(1)
+
+    # Confirm execution details with the user
+    console.print(f"[yellow]You are about to execute the following plan:[/]")
+    console.print(f"[cyan]Environment: {plan_data.get('environment')}[/]")
+    console.print(f"[cyan]Action: {plan_data.get('action')}[/]")
+    console.print(f"[cyan]Clusters: {', '.join([cluster['cluster_name'] for cluster in plan_data.get('clusters', [])])}[/]")
+    confirmation = input("[WARNING] Are you sure you want to proceed? (yes/no): ")
+    if confirmation.lower() != 'yes':
+        console.print("[red]Execution aborted by user.[/]")
+        return
 
     # Call the respective function based on plan type
     if plan_type == "autoscaling_computation":
