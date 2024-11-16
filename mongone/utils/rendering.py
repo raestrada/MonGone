@@ -29,6 +29,8 @@ def render_html_report(data):
         * 100,
         total_cost=data["total_cost"],
         total_predicted_cost=data["total_predicted_cost"],
+        estimated_saves=data["estimated_saves"],
+        estimated_saves_projected=data["estimated_saves_projected"],
     )
 
     # Save the report in the 'reports' directory

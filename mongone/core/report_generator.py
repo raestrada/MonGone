@@ -92,13 +92,7 @@ def generate_report_logic(config, period):
     clusters_without_autoscaling_disk = 0
     unused_cluster_count = 0
     total_cost = 0.0
-    total_predicted_cost = 0.0
-
-    current_day_of_month = datetime.now().day
-    days_in_month = (
-        datetime.now().replace(month=datetime.now().month % 12 + 1, day=1)
-        - timedelta(days=1)
-    ).day
+    estimated_saves = 0.0
 
     with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
         futures = [
@@ -122,11 +116,19 @@ def generate_report_logic(config, period):
                         clusters_without_autoscaling_disk += 1
                     if cluster["name"] in unused_clusters:
                         unused_cluster_count += 1
+                        estimated_saves += cluster["cost"]  # Assuming full cost is saved when scaled to free tier
                     total_cost += cluster["cost"]
 
-    # Calculate predicted cost for the full month using a simple linear extrapolation
-    if current_day_of_month > 0:
-        total_predicted_cost = (total_cost / current_day_of_month) * days_in_month
+                    # Estimating potential savings from enabling autoscaling
+                    if not cluster["autoscaling_compute"] or not cluster["autoscaling_disk"]:
+                        estimated_saves += cluster["cost"] * 0.2  # Assuming autoscaling saves 20% of cost
+
+    # Calculate the predicted cost based on current usage
+    days_in_month = 30  # Assuming 30-day months for simplicity
+    today = datetime.now().day
+    predicted_multiplier = days_in_month / today if today > 0 else 1
+    total_predicted_cost = total_cost * predicted_multiplier
+    estimated_saves_projected = estimated_saves * predicted_multiplier
 
     return {
         "report_data": report_data,
@@ -137,8 +139,9 @@ def generate_report_logic(config, period):
         "total_cost": total_cost,
         "total_predicted_cost": total_predicted_cost,
         "all_unused_clusters": all_unused_clusters,
+        "estimated_saves": estimated_saves,
+        "estimated_saves_projected": estimated_saves_projected,
     }
-
 
 def transform_force_data_to_expected_structure(raw_data, period=30):
     """
@@ -208,4 +211,6 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
         "total_cost": total_cost,
         "total_predicted_cost": total_cost * 1.5,
         "all_unused_clusters": all_unused_clusters,
+        "estimated_saves": total_cost/2,
+        "estimated_saves_projected": (total_cost/2)*1.3,
     }
