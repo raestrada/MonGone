@@ -209,19 +209,22 @@
             </div>
             <div class="tile">
                 <h4>No Compute Autoscaling</h4>
-                <p>{{ percentage_no_autoscaling_compute |round|int }}%</p>
+                <p>{{ percentage_no_autoscaling_compute | round | int }}%</p>
             </div>
             <div class="tile">
                 <h4>No Disk Autoscaling</h4>
-                <p>{{ percentage_no_autoscaling_disk |round|int }}%</p>
+                <p>{{ percentage_no_autoscaling_disk | round | int }}%</p>
             </div>
             <div class="tile">
                 <h4>Not In Use</h4>
-                <p>{{ percentage_unused_clusters |round|int }}%</p>
+                <p>{{ percentage_unused_clusters | round | int }}%</p>
             </div>
             <div class="tile">
                 <h4>Total Cost (USD)</h4>
-                <p>${{ total_cost |round|int }}</p>
+                <p>
+                    <span style="color: green;">${{ total_cost | round | int }}</span> /
+                    <span style="color: orange;">${{ total_predicted_cost | round | int }}</span>
+                </p>
             </div>
         </div>
 

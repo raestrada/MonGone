@@ -92,6 +92,10 @@ def generate_report_logic(config, period):
     clusters_without_autoscaling_disk = 0
     unused_cluster_count = 0
     total_cost = 0.0
+    total_predicted_cost = 0.0
+
+    current_day_of_month = datetime.now().day
+    days_in_month = (datetime.now().replace(month=datetime.now().month % 12 + 1, day=1) - timedelta(days=1)).day
 
     with ThreadPoolExecutor(max_workers=multiprocessing.cpu_count()) as executor:
         futures = [
@@ -117,6 +121,10 @@ def generate_report_logic(config, period):
                         unused_cluster_count += 1
                     total_cost += cluster["cost"]
 
+    # Calculate predicted cost for the full month using a simple linear extrapolation
+    if current_day_of_month > 0:
+        total_predicted_cost = (total_cost / current_day_of_month) * days_in_month
+
     return {
         "report_data": report_data,
         "total_clusters": total_clusters,
@@ -124,6 +132,7 @@ def generate_report_logic(config, period):
         "clusters_without_autoscaling_disk": clusters_without_autoscaling_disk,
         "unused_cluster_count": unused_cluster_count,
         "total_cost": total_cost,
+        "total_predicted_cost": total_predicted_cost,
         "all_unused_clusters": all_unused_clusters,
     }
 
@@ -194,5 +203,6 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
         "clusters_without_autoscaling_disk": clusters_without_autoscaling_disk,
         "unused_cluster_count": unused_cluster_count,
         "total_cost": total_cost,
+        "total_predicted_cost": total_cost*1.5,
         "all_unused_clusters": all_unused_clusters,
     }
