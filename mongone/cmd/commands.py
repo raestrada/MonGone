@@ -203,17 +203,21 @@ def execute(plan_type, environment):
     selected_index = int(answers.get("selected_plan").split(":")[0])
     selected_plan_file = plan_files[selected_index - 1]
 
-    # Display the selected plan in a detailed, user-friendly format
+    # Display the selected plan in a Terraform-like format
     with open(selected_plan_file, "r") as plan_file:
         plan_content = yaml.safe_load(plan_file)
-        console.print(Panel(f"[bold]Plan Summary for '{plan_type}' in '{environment}':[/]", style="blue", expand=False))
+        table = Table(title="Plan Preview", box=box.SIMPLE, highlight=True)
+        table.add_column("Environment", style="magenta")
+        table.add_column("Action", style="cyan")
+        table.add_column("Cluster Details", style="green")
 
-        for cluster in plan_content.get("clusters", []):
-            cluster_name = cluster.get("cluster_name")
-            org_id = cluster.get("org_id", "Unknown")
-            project_id = cluster.get("project_id", "Unknown")
-            action_description = f"[bold yellow]Action:[/] Enabling Autoscaling for Computation on cluster [cyan]{cluster_name}[/] in project [cyan]{project_id}[/] (Org ID: [cyan]{org_id}[/])"
-            console.print(Panel(action_description, style="green", expand=False))
+        for cluster in plan_content.get('clusters', []):
+            action = plan_content.get('action', 'Unknown Action')
+            environment = environment.capitalize()
+            cluster_details = f"Cluster Name: {cluster['cluster_name']}, Project ID: {cluster['project_id']}, Org ID: {cluster['org_id']}"
+            table.add_row(environment, action, cluster_details)
+
+        console.print(table)
 
     # Confirm execution
     questions = [
@@ -224,7 +228,7 @@ def execute(plan_type, environment):
     ]
     answers = prompt(questions)
     if answers.get("execute"):
-        execute_plan(plan_type, environment)
+        execute_plan(plan_type, environment, selected_plan_file)
     else:
         console.print("[yellow]Execution aborted by user.[/]")
 

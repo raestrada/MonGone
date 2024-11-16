@@ -10,10 +10,8 @@ console = Console()
 BASE_URL = "https://cloud.mongodb.com/api/atlas/v2/groups/{groupId}/clusters/{clusterName}"
 
 # Proxy function to execute plans based on type and environment
-def execute_plan(plan_type, environment):
-    plans_dir = f"./plans/{environment}"
-    plan_filename = f"{plans_dir}/{plan_type}_plan.yaml"
 
+def execute_plan(plan_type, environment, plan_filename):
     if not os.path.exists(plan_filename):
         console.print(f"[red]No plan file found for {plan_type} in environment {environment}. Skipping execution.[/]")
         return
