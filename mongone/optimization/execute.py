@@ -23,6 +23,10 @@ def execute_plan(plan_type, environment, plan_filename):
         enable_autoscaling_computation(plan_data)
     elif plan_type == "autoscaling_disk":
         enable_autoscaling_disk(plan_data)
+    elif plan_type == "scale_to_free_tier":
+        scale_to_free_tier(plan_data)
+    elif plan_type == "delete_clusters":
+        delete_clusters(plan_data)
     else:
         console.print(f"[red]Unknown plan type: {plan_type}[/]")
 
@@ -128,3 +132,70 @@ def enable_autoscaling_disk(plan_data):
 
         console.print(f"[blue]Enabling auto-scaling disk for cluster {cluster_name} in project {project_id}[/]")
         make_request(url, method="PATCH", data=payload, response_format="json")
+
+def scale_to_free_tier(plan_data):
+    # Load configuration for autoscaling settings
+    clusters = plan_data.get("clusters", [])
+    for cluster in clusters:
+        org_id = cluster.get("org_id")
+        project_id = cluster.get("project_id")
+        cluster_name = cluster.get("cluster_name")
+
+        if not org_id or not project_id or not cluster_name:
+            console.print("[red]Missing necessary information to execute plan[/]")
+            continue
+
+        url = BASE_URL.format(groupId=project_id, clusterName=cluster_name)
+
+        # Payload to scale to free tier and disable autoscaling
+        payload = {
+            "replicaSetScalingStrategy": "SEQUENTIAL",
+            "replicationSpecs": [
+                {
+                    "regionConfigs": [
+                        {
+                            "electableSpecs": {
+                                "diskSizeGB": 5,  # Set appropriate disk size for free tier (M0)
+                                "instanceSize": "M0",  # Set instance size to free tier
+                                "nodeCount": 1
+                            },
+                            "providerName": "AWS",
+                            "regionName": "US_EAST_1",  # Example region, adjust as needed
+                            "autoScaling": {
+                                "compute": {
+                                    "enabled": False,
+                                    "maxInstanceSize": "M0",
+                                    "minInstanceSize": "M0",
+                                    "scaleDownEnabled": False
+                                },
+                                "diskGB": {
+                                    "enabled": False
+                                }
+                            }
+                        }
+                    ],
+                    "zoneName": "string"  # Replace with actual zone name if necessary
+                }
+            ],
+            "redactClientLogData": True
+        }
+
+        console.print(f"[blue]Scaling cluster {cluster_name} to free tier in project {project_id}[/]")
+        make_request(url, data=payload, method="PATCH", response_format="json")
+
+# Function to delete clusters
+def delete_clusters(plan_data):
+    clusters = plan_data.get("clusters", [])
+    for cluster in clusters:
+        org_id = cluster.get("org_id")
+        project_id = cluster.get("project_id")
+        cluster_name = cluster.get("cluster_name")
+
+        if not org_id or not project_id or not cluster_name:
+            console.print("[red]Missing necessary information to execute plan[/]")
+            continue
+
+        url = BASE_URL.format(groupId=project_id, clusterName=cluster_name)
+
+        console.print(f"[blue]Deleting cluster {cluster_name} in project {project_id}[/]")
+        make_request(url, method="DELETE")
