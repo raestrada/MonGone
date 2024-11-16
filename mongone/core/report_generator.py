@@ -16,6 +16,7 @@ console = Console()
 
 
 def process_project(project, env_patterns, csv_data, cutoff_date):
+    project_id = project["id"]
     project_name = project["name"]
     environment = detect_environment(project_name, env_patterns)
     clusters = fetch_clusters_data(project["id"])
@@ -24,6 +25,7 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
         return None
 
     project_report = {
+        "id": project_id,
         "name": project_name,
         "environment": environment,
         "clusters": [],
@@ -141,6 +143,7 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
 
     for project in raw_data.get("projects", []):
         project_report = {
+            "id": project.get("id"),
             "name": project.get("name"),
             "environment": project.get("environment", "unknown"),
             "clusters": [],

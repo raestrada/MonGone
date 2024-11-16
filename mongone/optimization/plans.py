@@ -13,7 +13,6 @@ def ensure_directory(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-
 # Generate a YAML file
 def write_yaml_file(plan_name, environment, data):
     filename = f"{PLANS_DIR}/{environment}/{plan_name}_plan_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.yaml"
@@ -27,7 +26,8 @@ def generate_autoscaling_computation_plan(config, report_data, environment):
     clusters = [
         {
             "org_id": config.get("atlas_org_id"),
-            "project_id": project.get("name"),
+            "project_id": project.get("id"),
+            "project_name": project.get("name"),
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
@@ -48,7 +48,8 @@ def generate_autoscaling_disk_plan(config, report_data, environment):
     clusters = [
         {
             "org_id": config.get("atlas_org_id"),
-            "project_id": project.get("name"),
+            "project_id": project.get("id"),
+            "project_name": project.get("name"),
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
@@ -69,7 +70,8 @@ def generate_scale_to_free_tier_plan(config, report_data, environment):
     clusters = [
         {
             "org_id": config.get("atlas_org_id"),
-            "project_id": project.get("name"),
+            "project_id": project.get("id"),
+            "project_name": project.get("name"),
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
@@ -91,7 +93,8 @@ def generate_delete_clusters_plan(config, report_data, environment):
     clusters = [
         {
             "org_id": config.get("atlas_org_id"),
-            "project_id": project.get("name"),
+            "project_id": project.get("id"),
+            "project_name": project.get("name"),
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
@@ -118,4 +121,3 @@ def generate_plans(config, report_data):
         generate_autoscaling_disk_plan(config, report_data, environment)
         generate_scale_to_free_tier_plan(config, report_data, environment)
         generate_delete_clusters_plan(config, report_data, environment)
-
