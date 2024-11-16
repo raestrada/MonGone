@@ -1,5 +1,10 @@
 # MonGone Documentation
 
+## Warning
+⚠️ **Warning**: The execution phase of MonGone involves operations that may be destructive, especially when deleting clusters. Please ensure you understand the generated plan before proceeding with execution. The report and plan generation phases are safe to use for analysis, but take caution with optimizations and read the documentation thoroughly.
+
+---
+
 ## Overview
 MonGone is an open-source tool that helps optimize MongoDB Atlas environments by scaling down unused resources, converting fixed resources to auto-scaling, and reducing overall costs. Below is the complete documentation on how to install, configure, and effectively use MonGone to streamline your MongoDB management.
 
@@ -176,11 +181,6 @@ Make sure that the value of `report_period_days` matches your expectations for i
 
 ### How can I customize the environment patterns?
 You can modify the `environment_patterns` in `mongone.yaml` to use any custom regex that matches your project naming conventions.
-
----
-
-## Warning
-⚠️ **Warning**: The execution phase of MonGone involves operations that may be destructive, especially when deleting clusters. Please ensure you understand the generated plan before proceeding with execution. The report and plan generation phases are safe to use for analysis, but take caution with optimizations and read the documentation thoroughly.
 
 ---
 
