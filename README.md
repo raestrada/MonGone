@@ -71,6 +71,19 @@ mongone execute-plan --force
 ```
 The `--force` flag allows MonGone to proceed with the changes without further confirmation.
 
+#### 5. Execute the Optimization Plan
+Once an optimization plan is generated, you can execute it using the following command:
+
+```sh
+mongone execute-plan
+```
+
+This command will execute the actions defined in the optimization plan, such as scaling down unused resources or enabling auto-scaling for clusters. The process is straightforward and automated, allowing you to quickly optimize your MongoDB environment with minimal manual intervention.
+
+![Execute Optimization Plan Example](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731724625/mongone-execute_xbdq6l.png)
+
+The screenshot above shows an example of executing an optimization plan, highlighting the actions taken by MonGone to improve resource utilization and reduce costs.
+
 ### Force Data Option
 To override data checks and force an action, you can use the `--force-data` option with the generate-report or generate-plan commands:
 

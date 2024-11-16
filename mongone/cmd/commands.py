@@ -130,6 +130,7 @@ def generate_report(force, test, period):
     # Display summary in the console
     display_summary(data)
 
+
 @cli.command()
 @click.option(
     "--plan-type", 
@@ -202,13 +203,17 @@ def execute(plan_type, environment):
     selected_index = int(answers.get("selected_plan").split(":")[0])
     selected_plan_file = plan_files[selected_index - 1]
 
-    # Display the selected plan in a Terraform-like format
+    # Display the selected plan in a detailed, user-friendly format
     with open(selected_plan_file, "r") as plan_file:
-        plan_content = plan_file.read()
-        table = Table(title="Plan Preview", box=box.SIMPLE, highlight=True)
-        table.add_column("Plan Content", style="cyan")
-        table.add_row(plan_content)
-        console.print(table)
+        plan_content = yaml.safe_load(plan_file)
+        console.print(Panel(f"[bold]Plan Summary for '{plan_type}' in '{environment}':[/]", style="blue", expand=False))
+
+        for cluster in plan_content.get("clusters", []):
+            cluster_name = cluster.get("cluster_name")
+            org_id = cluster.get("org_id", "Unknown")
+            project_id = cluster.get("project_id", "Unknown")
+            action_description = f"[bold yellow]Action:[/] Enabling Autoscaling for Computation on cluster [cyan]{cluster_name}[/] in project [cyan]{project_id}[/] (Org ID: [cyan]{org_id}[/])"
+            console.print(Panel(action_description, style="green", expand=False))
 
     # Confirm execution
     questions = [

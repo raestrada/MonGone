@@ -81,6 +81,19 @@ mongone generate-plan --force-data true
 
 - **`--force-data`**: When set to `true`, the tool will enforce a deeper analysis of the data to create a more accurate optimization plan.
 
+### Step 5: Execute the Optimization Plan
+Once an optimization plan is generated, you can execute it using the following command:
+
+```sh
+mongone execute-plan
+```
+
+This command will execute the actions defined in the optimization plan, such as scaling down unused resources or enabling auto-scaling for clusters. The process is straightforward and automated, allowing you to quickly optimize your MongoDB environment with minimal manual intervention.
+
+![Execute Optimization Plan Example](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731724625/mongone-execute_xbdq6l.png)
+
+The screenshot above shows an example of executing an optimization plan, highlighting the actions taken by MonGone to improve resource utilization and reduce costs.
+
 ---
 
 ## Understanding `mongone.yaml`
@@ -158,6 +171,9 @@ Generates an HTML report for MongoDB Atlas resources.
 ### `mongone generate-plan`
 Generates an optimization plan for your MongoDB Atlas resources and optionally executes it.
 - **`--force-data`**: Forces an in-depth analysis of the resources to enhance the optimization plan.
+
+### `mongone execute-plan`
+Executes the generated optimization plan, scaling down unused resources and enabling auto-scaling for clusters as needed.
 
 ---
 
