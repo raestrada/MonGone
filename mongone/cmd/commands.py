@@ -5,6 +5,7 @@ from datetime import datetime
 from rich import box
 from rich.table import Table
 from rich.panel import Panel
+from rich.text import Text
 import glob
 from inquirer import prompt, List, Confirm
 
@@ -144,6 +145,30 @@ def generate_report(force, test, period):
 )
 def execute(plan_type, environment):
     """Execute a specific plan for the given environment."""
+
+    # Display a prominent warning message
+    warning_message = Text()
+    warning_message.append("WARNING: ", style="bold red")
+    warning_message.append("This script performs critical operations on your MongoDB Atlas clusters, including enabling/disabling autoscaling and deleting clusters. ", style="bold white")
+    warning_message.append("\n\n")
+    warning_message.append("Please make sure you understand the implications of each action before proceeding.", style="bold yellow")
+    warning_message.append("\n\n")
+    warning_message.append("The ", style="bold white")
+    warning_message.append("report generation ", style="bold green")
+    warning_message.append("and ", style="bold white")
+    warning_message.append("plan creation ", style="bold green")
+    warning_message.append("steps are generally safe and useful for gaining insights into your clusters. ", style="bold white")
+    warning_message.append("\n\n")
+    warning_message.append("HOWEVER, the ", style="bold white")
+    warning_message.append("execution ", style="bold red")
+    warning_message.append("of plans contains destructive actions, especially the ", style="bold white")
+    warning_message.append("DELETE CLUSTERS ", style="bold red blink")
+    warning_message.append("operation. ", style="bold white")
+    warning_message.append("\n\n")
+    warning_message.append("Understand the tool well and use it carefully. The tool is in an experimental state, and mistakes could lead to irreversible data loss.", style="bold yellow")
+
+    console.print(Panel(warning_message, title="CRITICAL WARNING", border_style="red", highlight=True))
+
 
     # If plan_type is not provided, prompt the user to select one
     if not plan_type:
