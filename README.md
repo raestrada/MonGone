@@ -97,7 +97,7 @@ For detailed guidance and more examples, check out the [MonGone Documentation](h
 ## Screenshot
 Below is a preview of the MonGone resource report:
 
-![MongoDB Atlas Example](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731674258/mongo-example_kzkqlh.png)
+![MongoDB Atlas Example](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731785050/mongone-docs_wpuy8w.png)
 
 ## Contributing
 MonGone is open-source, and contributions are always welcome! Here’s how you can contribute:

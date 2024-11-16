@@ -114,7 +114,7 @@ These patterns can be customized in the configuration file to fit your naming co
 
 ## Report Contents
 
-![MongoDB Atlas Report](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731674258/mongo-example_kzkqlh.png)
+![MongoDB Atlas Report](https://res.cloudinary.com/dyknhuvxt/image/upload/v1731785050/mongone-docs_wpuy8w.png)
 
 The HTML report (`mongone.html`) provides a comprehensive view of the MongoDB Atlas organization. It contains the following sections:
 
