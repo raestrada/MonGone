@@ -26,21 +26,49 @@ def make_request(url, params=None, data=None, method="GET", response_format="jso
             else "application/vnd.atlas.2024-08-05+csv"
         ),
     }
-    
+
     # Select the appropriate request method
     method = method.upper()
     console.print(f"[DEBUG] Sending {method} request to URL: {url}", style="bold blue")
 
     if method == "GET":
-        response = requests.get(url, auth=HTTPDigestAuth(public_key, private_key), headers=headers, params=params)
+        response = requests.get(
+            url,
+            auth=HTTPDigestAuth(public_key, private_key),
+            headers=headers,
+            params=params,
+        )
     elif method == "POST":
-        response = requests.post(url, auth=HTTPDigestAuth(public_key, private_key), headers=headers, params=params, json=data)
+        response = requests.post(
+            url,
+            auth=HTTPDigestAuth(public_key, private_key),
+            headers=headers,
+            params=params,
+            json=data,
+        )
     elif method == "PATCH":
-        response = requests.patch(url, auth=HTTPDigestAuth(public_key, private_key), headers=headers, params=params, json=data)
+        response = requests.patch(
+            url,
+            auth=HTTPDigestAuth(public_key, private_key),
+            headers=headers,
+            params=params,
+            json=data,
+        )
     elif method == "PUT":
-        response = requests.put(url, auth=HTTPDigestAuth(public_key, private_key), headers=headers, params=params, json=data)
+        response = requests.put(
+            url,
+            auth=HTTPDigestAuth(public_key, private_key),
+            headers=headers,
+            params=params,
+            json=data,
+        )
     elif method == "DELETE":
-        response = requests.delete(url, auth=HTTPDigestAuth(public_key, private_key), headers=headers, params=params)
+        response = requests.delete(
+            url,
+            auth=HTTPDigestAuth(public_key, private_key),
+            headers=headers,
+            params=params,
+        )
     else:
         console.print(f"[red]HTTP method '{method}' is not supported.[/]")
         return None

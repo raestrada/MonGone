@@ -10,7 +10,6 @@ import glob
 from inquirer import prompt, List, Confirm
 
 
-
 from mongone.core.config import load_config, save_config
 from mongone.core.report_generator import (
     generate_report_logic,
@@ -134,14 +133,21 @@ def generate_report(force, test, period):
 
 @cli.command()
 @click.option(
-    "--plan-type", 
-    type=click.Choice(["autoscaling_computation", "autoscaling_disk", "scale_to_free_tier", "delete_clusters"]),
-    help="Type of plan to execute."
+    "--plan-type",
+    type=click.Choice(
+        [
+            "autoscaling_computation",
+            "autoscaling_disk",
+            "scale_to_free_tier",
+            "delete_clusters",
+        ]
+    ),
+    help="Type of plan to execute.",
 )
 @click.option(
-    "--environment", 
+    "--environment",
     type=click.Choice(["staging", "production", "unknown"]),
-    help="Environment to execute the plan in."
+    help="Environment to execute the plan in.",
 )
 def execute(plan_type, environment):
     """Execute a specific plan for the given environment."""
@@ -149,26 +155,46 @@ def execute(plan_type, environment):
     # Display a prominent warning message
     warning_message = Text()
     warning_message.append("WARNING: ", style="bold red")
-    warning_message.append("This script performs critical operations on your MongoDB Atlas clusters, including enabling/disabling autoscaling and deleting clusters. ", style="bold white")
+    warning_message.append(
+        "This script performs critical operations on your MongoDB Atlas clusters, including enabling/disabling autoscaling and deleting clusters. ",
+        style="bold white",
+    )
     warning_message.append("\n\n")
-    warning_message.append("Please make sure you understand the implications of each action before proceeding.", style="bold yellow")
+    warning_message.append(
+        "Please make sure you understand the implications of each action before proceeding.",
+        style="bold yellow",
+    )
     warning_message.append("\n\n")
     warning_message.append("The ", style="bold white")
     warning_message.append("report generation ", style="bold green")
     warning_message.append("and ", style="bold white")
     warning_message.append("plan creation ", style="bold green")
-    warning_message.append("steps are generally safe and useful for gaining insights into your clusters. ", style="bold white")
+    warning_message.append(
+        "steps are generally safe and useful for gaining insights into your clusters. ",
+        style="bold white",
+    )
     warning_message.append("\n\n")
     warning_message.append("HOWEVER, the ", style="bold white")
     warning_message.append("execution ", style="bold red")
-    warning_message.append("of plans contains destructive actions, especially the ", style="bold white")
+    warning_message.append(
+        "of plans contains destructive actions, especially the ", style="bold white"
+    )
     warning_message.append("DELETE CLUSTERS ", style="bold red blink")
     warning_message.append("operation. ", style="bold white")
     warning_message.append("\n\n")
-    warning_message.append("Understand the tool well and use it carefully. The tool is in an experimental state, and mistakes could lead to irreversible data loss.", style="bold yellow")
+    warning_message.append(
+        "Understand the tool well and use it carefully. The tool is in an experimental state, and mistakes could lead to irreversible data loss.",
+        style="bold yellow",
+    )
 
-    console.print(Panel(warning_message, title="CRITICAL WARNING", border_style="red", highlight=True))
-
+    console.print(
+        Panel(
+            warning_message,
+            title="CRITICAL WARNING",
+            border_style="red",
+            highlight=True,
+        )
+    )
 
     # If plan_type is not provided, prompt the user to select one
     if not plan_type:
@@ -176,13 +202,13 @@ def execute(plan_type, environment):
             ("autoscaling_computation", "Enable Autoscaling for Computation"),
             ("autoscaling_disk", "Enable Autoscaling for Disk"),
             ("scale_to_free_tier", "Scale to Free Tier"),
-            ("delete_clusters", "Delete Clusters")
+            ("delete_clusters", "Delete Clusters"),
         ]
         questions = [
             List(
                 "plan_type",
                 message="Select plan type:",
-                choices=[option[0] for option in plan_options]
+                choices=[option[0] for option in plan_options],
             )
         ]
         answers = prompt(questions)
@@ -193,13 +219,13 @@ def execute(plan_type, environment):
         env_options = [
             ("staging", "Staging Environment"),
             ("production", "Production Environment"),
-            ("unknown", "Unknown Environment")
+            ("unknown", "Unknown Environment"),
         ]
         questions = [
             List(
                 "environment",
                 message="Select environment:",
-                choices=[option[0] for option in env_options]
+                choices=[option[0] for option in env_options],
             )
         ]
         answers = prompt(questions)
@@ -210,7 +236,9 @@ def execute(plan_type, environment):
     plan_files = glob.glob(f"{plans_dir}/{plan_type}_plan_*.yaml")
 
     if not plan_files:
-        console.print(f"[red]No plan files found for {plan_type} in environment {environment}. Skipping execution.[/]")
+        console.print(
+            f"[red]No plan files found for {plan_type} in environment {environment}. Skipping execution.[/]"
+        )
         return
 
     # Display available plans and ask the user to select one
@@ -221,7 +249,7 @@ def execute(plan_type, environment):
         List(
             "selected_plan",
             message="Select a plan to execute:",
-            choices=[f"{idx}: {plan_file}" for idx, plan_file in options]
+            choices=[f"{idx}: {plan_file}" for idx, plan_file in options],
         )
     ]
     answers = prompt(questions)
@@ -236,8 +264,8 @@ def execute(plan_type, environment):
         table.add_column("Action", style="cyan")
         table.add_column("Cluster Details", style="green")
 
-        for cluster in plan_content.get('clusters', []):
-            action = plan_content.get('action', 'Unknown Action')
+        for cluster in plan_content.get("clusters", []):
+            action = plan_content.get("action", "Unknown Action")
             environment = environment.capitalize()
             cluster_details = f"Cluster Name: {cluster['cluster_name']}, Project Name: {cluster['project_name']}, Project ID: {cluster['project_id']}, Org ID: {cluster['org_id']}"
             table.add_row(environment, action, cluster_details)
@@ -245,17 +273,13 @@ def execute(plan_type, environment):
         console.print(table)
 
     # Confirm execution
-    questions = [
-        Confirm(
-            "execute",
-            message="Do you want to execute this plan?"
-        )
-    ]
+    questions = [Confirm("execute", message="Do you want to execute this plan?")]
     answers = prompt(questions)
     if answers.get("execute"):
         execute_plan(plan_type, environment, selected_plan_file)
     else:
         console.print("[yellow]Execution aborted by user.[/]")
+
 
 if __name__ == "__main__":
     cli()
