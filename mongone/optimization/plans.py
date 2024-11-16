@@ -31,8 +31,9 @@ def generate_autoscaling_computation_plan(config, report_data, environment):
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
+        if project.get("environment") == environment
         for cluster in project.get("clusters", [])
-        if not cluster.get("autoscaling_compute") and project.get("environment") == environment
+        if not cluster.get("autoscaling_compute")
     ]
     if clusters:
         plan_data = {
@@ -40,8 +41,8 @@ def generate_autoscaling_computation_plan(config, report_data, environment):
             "clusters": clusters,
         }
         write_yaml_file("autoscaling_computation", environment, plan_data)
-    else:
-        console.print(f"[blue]No clusters found for autoscaling_computation in environment {environment}. Skipping plan generation.[/]")
+        return True
+    return False
 
 # Generate plans to activate disk autoscaling
 def generate_autoscaling_disk_plan(config, report_data, environment):
@@ -53,8 +54,9 @@ def generate_autoscaling_disk_plan(config, report_data, environment):
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
+        if project.get("environment") == environment
         for cluster in project.get("clusters", [])
-        if not cluster.get("autoscaling_disk") and project.get("environment") == environment
+        if not cluster.get("autoscaling_disk")
     ]
     if clusters:
         plan_data = {
@@ -62,8 +64,8 @@ def generate_autoscaling_disk_plan(config, report_data, environment):
             "clusters": clusters,
         }
         write_yaml_file("autoscaling_disk", environment, plan_data)
-    else:
-        console.print(f"[blue]No clusters found for autoscaling_disk in environment {environment}. Skipping plan generation.[/]")
+        return True
+    return False
 
 # Generate plans to scale to free tier and remove autoscaling
 def generate_scale_to_free_tier_plan(config, report_data, environment):
@@ -75,8 +77,9 @@ def generate_scale_to_free_tier_plan(config, report_data, environment):
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
+        if project.get("environment") == environment
         for cluster in project.get("clusters", [])
-        if cluster.get("name") in report_data.get("all_unused_clusters", []) and project.get("environment") == environment
+        if cluster.get("name") in report_data.get("all_unused_clusters", [])
     ]
     if clusters:
         plan_data = {
@@ -85,8 +88,8 @@ def generate_scale_to_free_tier_plan(config, report_data, environment):
             "clusters": clusters,
         }
         write_yaml_file("scale_to_free_tier", environment, plan_data)
-    else:
-        console.print(f"[blue]No clusters found for scale_to_free_tier in environment {environment}. Skipping plan generation.[/]")
+        return True
+    return False
 
 # Generate plans to delete clusters
 def generate_delete_clusters_plan(config, report_data, environment):
@@ -98,8 +101,9 @@ def generate_delete_clusters_plan(config, report_data, environment):
             "cluster_name": cluster["name"],
         }
         for project in report_data.get("report_data", [])
+        if project.get("environment") == environment
         for cluster in project.get("clusters", [])
-        if cluster.get("name") in report_data.get("all_unused_clusters", []) and project.get("environment") == environment
+        if cluster.get("name") in report_data.get("all_unused_clusters", [])
     ]
     if clusters:
         plan_data = {
@@ -107,8 +111,8 @@ def generate_delete_clusters_plan(config, report_data, environment):
             "clusters": clusters,
         }
         write_yaml_file("delete_clusters", environment, plan_data)
-    else:
-        console.print(f"[blue]No clusters found for delete_clusters in environment {environment}. Skipping plan generation.[/]")
+        return True
+    return False
 
 # Main function to coordinate plan generation
 def generate_plans(config, report_data):
@@ -117,7 +121,14 @@ def generate_plans(config, report_data):
     # Generate different plans for each environment based on report data
     for environment in ["staging", "production", "unknown"]:
         console.print(f"[blue]Generating plans for environment:[/] {environment}")
-        generate_autoscaling_computation_plan(config, report_data, environment)
-        generate_autoscaling_disk_plan(config, report_data, environment)
-        generate_scale_to_free_tier_plan(config, report_data, environment)
-        generate_delete_clusters_plan(config, report_data, environment)
+        plans_generated = False
+
+        plans_generated |= generate_autoscaling_computation_plan(config, report_data, environment)
+        plans_generated |= generate_autoscaling_disk_plan(config, report_data, environment)
+        plans_generated |= generate_scale_to_free_tier_plan(config, report_data, environment)
+        plans_generated |= generate_delete_clusters_plan(config, report_data, environment)
+
+        # Print message only if no plans were generated for the environment
+        if not plans_generated:
+            console.print(f"[blue]No clusters found for any plans in environment {environment}. Skipping plan generation.[/]")
+
