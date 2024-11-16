@@ -73,7 +73,7 @@ def enable_autoscaling_computation(plan_data):
         }
 
         console.print(f"[blue]Enabling auto-scaling computation for cluster {cluster_name} in project {project_id}[/]")
-        make_request(url, data=payload, response_format="json")
+        make_request(url, method="PATCH", data=payload, response_format="json")
 
 # Function to enable auto-scaling disk for clusters
 def enable_autoscaling_disk(plan_data):
@@ -127,4 +127,4 @@ def enable_autoscaling_disk(plan_data):
         }
 
         console.print(f"[blue]Enabling auto-scaling disk for cluster {cluster_name} in project {project_id}[/]")
-        make_request(url, data=payload, response_format="json")
+        make_request(url, method="PATCH", data=payload, response_format="json")
