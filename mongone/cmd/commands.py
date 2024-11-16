@@ -214,7 +214,7 @@ def execute(plan_type, environment):
         for cluster in plan_content.get('clusters', []):
             action = plan_content.get('action', 'Unknown Action')
             environment = environment.capitalize()
-            cluster_details = f"Cluster Name: {cluster['cluster_name']}, Project ID: {cluster['project_id']}, Org ID: {cluster['org_id']}"
+            cluster_details = f"Cluster Name: {cluster['cluster_name']}, Project Name: {cluster['project_name']}, Project ID: {cluster['project_id']}, Org ID: {cluster['org_id']}"
             table.add_row(environment, action, cluster_details)
 
         console.print(table)
