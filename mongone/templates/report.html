@@ -266,7 +266,12 @@
                     <td class="{{ 'autoscaling-enabled' if cluster.autoscaling_disk else 'autoscaling-disabled' }}">
                         {{ 'Enabled' if cluster.autoscaling_disk else 'Disabled' }}
                     </td>
-                    <td>${{ cluster.cost |round|int }} USD</td>
+                    <td>
+                        <p>
+                            <span style="color: green;">${{ cluster.cost | round | int }}</span> /
+                            <span style="color: orange;">${{ cluster.predicted_cost | round | int }}</span>
+                        </p>
+                    </td>
                 </tr>
                 {% endfor %}
                 {% endfor %}

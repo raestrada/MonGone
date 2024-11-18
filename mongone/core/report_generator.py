@@ -11,6 +11,7 @@ from mongone.core.data_loader import (
     fetch_projects_data,
     fetch_invoice_data,
 )
+from mongone.cost.prediction import calculate_predicted_costs
 
 console = Console()
 
@@ -47,6 +48,15 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
         autoscaling_compute, autoscaling_disk = is_cluster_autoscaling(
             project["id"], cluster_name
         )
+
+        cost = get_cluster_cost(csv_data, project_name, cluster_name)
+
+        # Llamar a la función calculate_predicted_costs
+        predicted_values = calculate_predicted_costs(cost, 0)
+
+        # Extraer los valores calculados
+        predicted_cost = predicted_values["total_predicted_cost"]
+
         cluster_report = {
             "name": cluster_name,
             "last_access_time": (
@@ -55,6 +65,7 @@ def process_project(project, env_patterns, csv_data, cutoff_date):
                 else "N/A"
             ),
             "cost": get_cluster_cost(csv_data, project_name, cluster_name),
+            "predicted_cost": predicted_cost,
             "autoscaling_compute": autoscaling_compute,
             "autoscaling_disk": autoscaling_disk,
             "inuse": not cluster_unused,
@@ -123,12 +134,13 @@ def generate_report_logic(config, period):
                     if not cluster["autoscaling_compute"] or not cluster["autoscaling_disk"]:
                         estimated_saves += cluster["cost"] * 0.2  # Assuming autoscaling saves 20% of cost
 
-    # Calculate the predicted cost based on current usage
-    days_in_month = 30  # Assuming 30-day months for simplicity
-    today = datetime.now().day
-    predicted_multiplier = days_in_month / today if today > 0 else 1
-    total_predicted_cost = total_cost * predicted_multiplier
-    estimated_saves_projected = estimated_saves * predicted_multiplier
+    # Llamar a la función calculate_predicted_costs
+    predicted_values = calculate_predicted_costs(total_cost, estimated_saves)
+
+    # Extraer los valores calculados
+    total_predicted_cost = predicted_values["total_predicted_cost"]
+    estimated_saves_projected = predicted_values["estimated_saves_projected"]
+
 
     return {
         "report_data": report_data,
@@ -183,6 +195,7 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
                 "last_access_time": cluster.get("last_access_time", "N/A"),
                 "databases": cluster.get("databases", []),
                 "cost": cluster.get("cost", 0),
+                "predicted_cost": cluster.get("predicted_cost", 0),
                 "autoscaling_compute": cluster.get("autoscaling_compute", False),
                 "autoscaling_disk": cluster.get("autoscaling_disk", False),
                 "inuse": cluster.get("inuse", True),
