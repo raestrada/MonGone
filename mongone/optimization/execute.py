@@ -71,9 +71,9 @@ def enable_autoscaling_computation(plan_data):
 
     # Extract default values from configuration or use fallback values
     provider_name = autoscaling_defaults.get("provider_name", "AWS")
-    region_name = autoscaling_defaults.get("region_name", "US_GOV_WEST_1")
     max_instance_size = autoscaling_defaults.get("max_instance_size", "M40")
     min_instance_size = autoscaling_defaults.get("min_instance_size", "M10")
+    priority = autoscaling_defaults.get("priority", 7)
 
     clusters = plan_data.get("clusters", [])
     for cluster in clusters:
@@ -85,7 +85,20 @@ def enable_autoscaling_computation(plan_data):
             console.print("[red]Missing necessary information to execute plan[/]")
             continue
 
+        # Fetch current cluster details
         url = BASE_URL.format(groupId=project_id, clusterName=cluster_name)
+        
+        response = make_request(url, method="GET")
+
+        if response is None:
+            console.print(f"[red]Failed to fetch cluster details for {cluster_name} in project {project_id}. Skipping...[/]")
+            continue
+
+        cluster_details = response.json()
+        current_region_name = cluster_details['replicationSpecs'][0]['regionConfigs'][0]['regionName']
+
+        # Use the current region to avoid conflicts
+        region_name = current_region_name
 
         # Payload to enable compute auto-scaling
         payload = {
@@ -95,6 +108,12 @@ def enable_autoscaling_computation(plan_data):
                         {
                             "providerName": provider_name,
                             "regionName": region_name,
+                            "priority": priority,
+                            "electableSpecs": {
+                                "instanceSize": min_instance_size,
+                                "nodeCount": 3,
+                                "diskSizeGB": 10  # Example disk size, adjust as needed
+                            },
                             "autoScaling": {
                                 "compute": {
                                     "enabled": True,
@@ -123,7 +142,6 @@ def enable_autoscaling_disk(plan_data):
 
     # Extract default values from configuration or use fallback values
     provider_name = autoscaling_defaults.get("provider_name", "AWS")
-    region_name = autoscaling_defaults.get("region_name", "US_GOV_WEST_1")
     max_instance_size = autoscaling_defaults.get("max_instance_size", "M40")
     min_instance_size = autoscaling_defaults.get("min_instance_size", "M10")
 
@@ -137,7 +155,20 @@ def enable_autoscaling_disk(plan_data):
             console.print("[red]Missing necessary information to execute plan[/]")
             continue
 
+        # Fetch current cluster details
         url = BASE_URL.format(groupId=project_id, clusterName=cluster_name)
+        
+        response = make_request(url, method="GET")
+
+        if response is None:
+            console.print(f"[red]Failed to fetch cluster details for {cluster_name} in project {project_id}. Skipping...[/]")
+            continue
+
+        cluster_details = response.json()
+        current_region_name = cluster_details['replicationSpecs'][0]['regionConfigs'][0]['regionName']
+
+        # Use the current region to avoid conflicts
+        region_name = current_region_name
 
         # Payload to enable disk auto-scaling
         payload = {
@@ -148,6 +179,7 @@ def enable_autoscaling_disk(plan_data):
                         {
                             "providerName": provider_name,
                             "regionName": region_name,
+                            "priority": 7,  # Adding required priority attribute
                             "autoScaling": {
                                 "compute": {
                                     "enabled": True,
@@ -156,6 +188,11 @@ def enable_autoscaling_disk(plan_data):
                                     "scaleDownEnabled": True,
                                 },
                                 "diskGB": {"enabled": True},
+                            },
+                            "electableSpecs": {
+                                "instanceSize": min_instance_size,
+                                "nodeCount": 3,
+                                "diskSizeGB": 10  # Example disk size, adjust as needed
                             },
                         }
                     ],

@@ -23,7 +23,7 @@ MonGone is currently in an experimental phase. The report generation features ar
 Install MonGone directly from GitHub using `pipx`:
 
 ```sh
-pipx install git+https://github.com/raestrada/MonGone.git@v0.4.1
+pipx install git+https://github.com/raestrada/MonGone.git@v0.4.2
 ```
 
 ### Usage
