@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def calculate_predicted_costs(total_cost, estimated_saves):
     """
     Calculate the predicted total cost and estimated savings for the month
@@ -15,7 +16,7 @@ def calculate_predicted_costs(total_cost, estimated_saves):
     days_in_month = 30  # Assuming a 30-day month for simplicity
     today = datetime.now().day
     predicted_multiplier = days_in_month / today if today > 0 else 1
-    
+
     total_predicted_cost = total_cost * predicted_multiplier
     estimated_saves_projected = estimated_saves * predicted_multiplier
 

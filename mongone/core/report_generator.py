@@ -127,12 +127,19 @@ def generate_report_logic(config, period):
                         clusters_without_autoscaling_disk += 1
                     if cluster["name"] in unused_clusters:
                         unused_cluster_count += 1
-                        estimated_saves += cluster["cost"]  # Assuming full cost is saved when scaled to free tier
+                        estimated_saves += cluster[
+                            "cost"
+                        ]  # Assuming full cost is saved when scaled to free tier
                     total_cost += cluster["cost"]
 
                     # Estimating potential savings from enabling autoscaling
-                    if not cluster["autoscaling_compute"] or not cluster["autoscaling_disk"]:
-                        estimated_saves += cluster["cost"] * 0.2  # Assuming autoscaling saves 20% of cost
+                    if (
+                        not cluster["autoscaling_compute"]
+                        or not cluster["autoscaling_disk"]
+                    ):
+                        estimated_saves += (
+                            cluster["cost"] * 0.2
+                        )  # Assuming autoscaling saves 20% of cost
 
     # Llamar a la función calculate_predicted_costs
     predicted_values = calculate_predicted_costs(total_cost, estimated_saves)
@@ -140,7 +147,6 @@ def generate_report_logic(config, period):
     # Extraer los valores calculados
     total_predicted_cost = predicted_values["total_predicted_cost"]
     estimated_saves_projected = predicted_values["estimated_saves_projected"]
-
 
     return {
         "report_data": report_data,
@@ -154,6 +160,7 @@ def generate_report_logic(config, period):
         "estimated_saves": estimated_saves,
         "estimated_saves_projected": estimated_saves_projected,
     }
+
 
 def transform_force_data_to_expected_structure(raw_data, period=30):
     """
@@ -224,6 +231,6 @@ def transform_force_data_to_expected_structure(raw_data, period=30):
         "total_cost": total_cost,
         "total_predicted_cost": total_cost * 1.5,
         "all_unused_clusters": all_unused_clusters,
-        "estimated_saves": total_cost/2,
-        "estimated_saves_projected": (total_cost/2)*1.3,
+        "estimated_saves": total_cost / 2,
+        "estimated_saves_projected": (total_cost / 2) * 1.3,
     }

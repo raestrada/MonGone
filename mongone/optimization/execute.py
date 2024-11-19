@@ -87,15 +87,19 @@ def enable_autoscaling_computation(plan_data):
 
         # Fetch current cluster details
         url = BASE_URL.format(groupId=project_id, clusterName=cluster_name)
-        
+
         response = make_request(url, method="GET")
 
         if response is None:
-            console.print(f"[red]Failed to fetch cluster details for {cluster_name} in project {project_id}. Skipping...[/]")
+            console.print(
+                f"[red]Failed to fetch cluster details for {cluster_name} in project {project_id}. Skipping...[/]"
+            )
             continue
 
         cluster_details = response.json()
-        current_region_name = cluster_details['replicationSpecs'][0]['regionConfigs'][0]['regionName']
+        current_region_name = cluster_details["replicationSpecs"][0]["regionConfigs"][
+            0
+        ]["regionName"]
 
         # Use the current region to avoid conflicts
         region_name = current_region_name
@@ -112,7 +116,7 @@ def enable_autoscaling_computation(plan_data):
                             "electableSpecs": {
                                 "instanceSize": min_instance_size,
                                 "nodeCount": 3,
-                                "diskSizeGB": 10  # Example disk size, adjust as needed
+                                "diskSizeGB": 10,  # Example disk size, adjust as needed
                             },
                             "autoScaling": {
                                 "compute": {
@@ -157,15 +161,19 @@ def enable_autoscaling_disk(plan_data):
 
         # Fetch current cluster details
         url = BASE_URL.format(groupId=project_id, clusterName=cluster_name)
-        
+
         response = make_request(url, method="GET")
 
         if response is None:
-            console.print(f"[red]Failed to fetch cluster details for {cluster_name} in project {project_id}. Skipping...[/]")
+            console.print(
+                f"[red]Failed to fetch cluster details for {cluster_name} in project {project_id}. Skipping...[/]"
+            )
             continue
 
         cluster_details = response.json()
-        current_region_name = cluster_details['replicationSpecs'][0]['regionConfigs'][0]['regionName']
+        current_region_name = cluster_details["replicationSpecs"][0]["regionConfigs"][
+            0
+        ]["regionName"]
 
         # Use the current region to avoid conflicts
         region_name = current_region_name
@@ -192,7 +200,7 @@ def enable_autoscaling_disk(plan_data):
                             "electableSpecs": {
                                 "instanceSize": min_instance_size,
                                 "nodeCount": 3,
-                                "diskSizeGB": 10  # Example disk size, adjust as needed
+                                "diskSizeGB": 10,  # Example disk size, adjust as needed
                             },
                         }
                     ],
